@@ -3,13 +3,13 @@
   import {
     game,
     production,
-    dispatchValue,
+    intelFlow,
+    equipFlow,
     activeBuff,
     alerta,
     offlineReport,
     threatEvent,
     toast,
-    dispatch,
     claimAlerta,
     startLoop,
     availableUpgrades,
@@ -23,6 +23,7 @@
     debugSetVerba,
     debugAddVerba,
     debugAddDossies,
+    debugAddSupport,
     debugSpawnAlerta,
     type BuyAmount,
   } from "./lib/game/state";
@@ -43,16 +44,6 @@
   let buyAmount = $state<BuyAmount>(1);
 
   const BUY_OPTIONS: BuyAmount[] = [1, 10, 100, "max"];
-
-  // Punches float up from the button on each click.
-  let punches = $state<{ id: number; x: number; text: string }[]>([]);
-  let punchId = 0;
-  function handleDispatch() {
-    const gained = dispatch();
-    const id = punchId++;
-    punches = [...punches, { id, x: Math.round(Math.random() * 44 - 22), text: `+${formatNumber(gained, 0)}` }];
-    setTimeout(() => (punches = punches.filter((p) => p.id !== id)), 700);
-  }
 
   // Toast auto-dismiss.
   let liveToast = $state<{ id: number; text: string; tone: string } | null>(null);
@@ -130,19 +121,24 @@
       </div>
 
       {#if $activeBuff}
-        <div class="buff-badge" class:punho={$activeBuff.kind === "resposta"}>
+        <div class="buff-badge" >
           <span class="buff-label">{$activeBuff.label}</span>
           <span class="buff-time mono">{Math.ceil(buffLeft / 1000)}s</span>
         </div>
       {/if}
 
-      <button class="punch-btn" onclick={handleDispatch}>
-        <span class="display">Despachar</span>
-        <span class="punch-value mono">+{formatNumber($dispatchValue, 0)}</span>
-        {#each punches as p (p.id)}
-          <span class="punch-fx display" style="--x: {p.x}px">{p.text}</span>
-        {/each}
-      </button>
+      <div class="support">
+        <div class="support-row">
+          <span class="support-label">🔍 Intel</span>
+          <span class="support-val mono">{Math.floor($game.intel)}</span>
+          <span class="support-rate mono">+{$intelFlow.toFixed(2)}/s</span>
+        </div>
+        <div class="support-row">
+          <span class="support-label">🔩 Equip.</span>
+          <span class="support-val mono">{Math.floor($game.equipamento)}</span>
+          <span class="support-rate mono">+{$equipFlow.toFixed(2)}/s</span>
+        </div>
+      </div>
 
       <div class="boss-panel">
         <div class="boss-head">
@@ -267,6 +263,7 @@
   <p class="debug-hint">Aceita negativo e notação tipo 1e12.</p>
   <div class="debug-sep"></div>
   <button class="debug-btn wide" onclick={() => debugAddDossies(50)}>+50 dossiês</button>
+  <button class="debug-btn wide" onclick={() => debugAddSupport(500)}>+500 intel/equip</button>
   <button class="debug-btn wide" onclick={debugSpawnAlerta}>Disparar alerta</button>
 </aside>
 
@@ -382,52 +379,38 @@
     letter-spacing: 0.04em;
   }
 
-  .punch-btn {
-    position: relative;
+  .support {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 0.1rem;
-    background: var(--hero-red);
-    color: #1a1020;
-    border: 3px solid var(--paper);
-    border-radius: 999px;
-    padding: 0.8rem 1.2rem;
-    font-size: 1.05rem;
-    box-shadow: 0 6px 0 var(--hero-red-ink);
-    transition:
-      transform 0.08s ease,
-      box-shadow 0.08s ease;
+    gap: 0.3rem;
+    background: var(--panel-raised);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 0.55rem 0.7rem;
   }
-  .punch-btn:active {
-    transform: translateY(4px);
-    box-shadow: 0 2px 0 var(--hero-red-ink);
+  .support-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.45rem;
   }
-  .punch-value {
-    font-size: 0.68rem;
-    opacity: 0.75;
+  .support-label {
+    flex: 1;
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-soft);
   }
-  .punch-fx {
-    position: absolute;
-    top: -6px;
-    left: calc(50% + var(--x));
-    transform: translateX(-50%);
-    color: var(--power-gold);
-    font-size: 1.05rem;
-    pointer-events: none;
-    animation: float-up 0.7s ease-out forwards;
-    text-shadow: 1px 1px 0 var(--hero-red-ink);
-    white-space: nowrap;
+  .support-val {
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: var(--sky-blue);
   }
-  @keyframes float-up {
-    from {
-      opacity: 1;
-      transform: translate(-50%, 0) scale(1);
-    }
-    to {
-      opacity: 0;
-      transform: translate(-50%, -48px) scale(1.15);
-    }
+  .support-rate {
+    font-size: 0.64rem;
+    color: var(--text-faint);
+    min-width: 4.2em;
+    text-align: right;
   }
 
   .boss-panel {

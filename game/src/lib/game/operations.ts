@@ -17,7 +17,14 @@ export interface OperationDef {
   roleBonus: number;
   cooldownMs: number;
   minThreat: number;
+  /** Spent to launch. Investigação is the only source — this is the gate. */
+  intelCost: number;
+  /** Optional: if the agency has it, the squad goes out equipped. */
+  equipCost: number;
 }
+
+/** Payout multiplier when the squad goes out fully equipped. */
+export const EQUIPPED_BONUS = 1.5;
 
 export const OPERATIONS: OperationDef[] = [
   {
@@ -32,6 +39,8 @@ export const OPERATIONS: OperationDef[] = [
     roleBonus: 1.5,
     cooldownMs: 90_000,
     minThreat: 1,
+    intelCost: 5,
+    equipCost: 2,
   },
   {
     id: "resgate",
@@ -45,6 +54,8 @@ export const OPERATIONS: OperationDef[] = [
     roleBonus: 1.5,
     cooldownMs: 120_000,
     minThreat: 2,
+    intelCost: 9,
+    equipCost: 3,
   },
   {
     id: "infiltracao",
@@ -58,6 +69,8 @@ export const OPERATIONS: OperationDef[] = [
     roleBonus: 1.6,
     cooldownMs: 200_000,
     minThreat: 4,
+    intelCost: 20,
+    equipCost: 7,
   },
   {
     id: "contencao",
@@ -71,6 +84,8 @@ export const OPERATIONS: OperationDef[] = [
     roleBonus: 1.6,
     cooldownMs: 260_000,
     minThreat: 7,
+    intelCost: 34,
+    equipCost: 12,
   },
   {
     id: "assalto",
@@ -84,6 +99,8 @@ export const OPERATIONS: OperationDef[] = [
     roleBonus: 1.7,
     cooldownMs: 360_000,
     minThreat: 11,
+    intelCost: 60,
+    equipCost: 22,
   },
   {
     id: "bloqueio",
@@ -97,6 +114,8 @@ export const OPERATIONS: OperationDef[] = [
     roleBonus: 1.8,
     cooldownMs: 500_000,
     minThreat: 16,
+    intelCost: 110,
+    equipCost: 40,
   },
   {
     id: "forca-tarefa",
@@ -109,6 +128,8 @@ export const OPERATIONS: OperationDef[] = [
     roleBonus: 1,
     cooldownMs: 720_000,
     minThreat: 22,
+    intelCost: 200,
+    equipCost: 75,
   },
 ];
 

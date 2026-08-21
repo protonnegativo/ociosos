@@ -10,10 +10,16 @@
     factionSynergy,
     purchaseImpact,
     isDeployed,
+    assignedDepartment,
+    assignHero,
+    departmentSlots,
+    heroesInDepartment,
+    departmentUnlocked,
     type BuyAmount,
   } from "../game/state";
   import { activeBuff } from "../game/state";
   import { HEROES, FACTION_COLOR, ROLE_ICON, milestoneMultiplier, nextMilestone } from "../game/heroes";
+  import { DEPARTMENTS, DEPARTMENTS_BY_ID } from "../game/departments";
   import { formatNumber, formatRate, timeToAfford } from "../game/format";
 
   let { buyAmount }: { buyAmount: BuyAmount } = $props();
@@ -40,6 +46,7 @@
         level,
         recruited: level > 0,
         deployed: isDeployed($game, def.id),
+        dept: assignedDepartment($game, def.id),
         buyCount: n,
         shownCount: shown,
         cost,
@@ -53,7 +60,31 @@
       };
     }),
   );
+
+  // Post occupancy drives which chips are still clickable.
+  let posts = $derived(
+    DEPARTMENTS.map((d) => ({
+      def: d,
+      unlocked: departmentUnlocked($game, d),
+      used: heroesInDepartment($game, d.id).length,
+      slots: departmentSlots($game, d),
+    })),
+  );
+
+  function postFull(deptId: string): boolean {
+    const p = posts.find((x) => x.def.id === deptId);
+    return !!p && p.used >= p.slots;
+  }
 </script>
+
+<div class="posts-bar">
+  {#each posts.filter((p) => p.unlocked) as p (p.def.id)}
+    <span class="post-tag" class:full={!p.def.unlimited && p.used >= p.slots} title={p.def.desc}>
+      {p.def.emoji} {p.def.name}
+      <strong>{p.def.unlimited ? p.used : `${p.used}/${p.slots}`}</strong>
+    </span>
+  {/each}
+</div>
 
 <div class="roster">
   {#each rows as row (row.def.id)}
@@ -102,6 +133,29 @@
             <span class="chip chip-muted">🔒 não alistado</span>
           {/if}
         </div>
+
+        {#if row.recruited}
+          <div class="assign">
+            {#if row.deployed}
+              <span class="assign-field">🎯 em operação</span>
+            {:else}
+              {#each posts as p (p.def.id)}
+                {#if p.unlocked}
+                  {@const active = row.dept === p.def.id}
+                  <button
+                    class="assign-btn"
+                    class:active
+                    disabled={!active && postFull(p.def.id)}
+                    title={p.def.desc}
+                    onclick={() => assignHero(row.def.id, p.def.id)}
+                  >
+                    {p.def.emoji} {p.def.name}
+                  </button>
+                {/if}
+              {/each}
+            {/if}
+          </div>
+        {/if}
 
         {#if row.recruited && row.next}
           <div class="milestone-hint mono">
@@ -242,6 +296,72 @@
     gap: 0.3rem;
     margin-top: 0.15rem;
   }
+  .posts-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 0.7rem;
+  }
+  .post-tag {
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-soft);
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 20px;
+    padding: 0.2rem 0.65rem;
+  }
+  .post-tag strong {
+    color: var(--sky-blue);
+    margin-left: 0.15rem;
+  }
+  .post-tag.full strong {
+    color: var(--power-gold);
+  }
+
+  .assign {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-top: 0.35rem;
+  }
+  .assign-btn {
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 0.64rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: transparent;
+    border: 1px solid var(--rule);
+    color: var(--text-faint);
+    border-radius: 20px;
+    padding: 0.1rem 0.5rem;
+  }
+  .assign-btn:hover:not(:disabled) {
+    border-color: var(--sky-blue);
+    color: var(--sky-blue);
+  }
+  .assign-btn.active {
+    background: color-mix(in srgb, var(--sky-blue) 22%, transparent);
+    border-color: var(--sky-blue);
+    color: var(--sky-blue);
+  }
+  .assign-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+  .assign-field {
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 0.64rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--gain-green);
+    border: 1px solid var(--gain-green-ink);
+    border-radius: 20px;
+    padding: 0.1rem 0.5rem;
+  }
+
   .milestone-hint {
     font-size: 0.64rem;
     color: var(--fragment-cyan);

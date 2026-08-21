@@ -8,8 +8,9 @@
     opRoleBonusApplies,
     deployOperation,
     heroOutputRaw,
+    opDurationMs,
   } from "../game/state";
-  import { OPERATIONS, OPERATIONS_BY_ID } from "../game/operations";
+  import { OPERATIONS, OPERATIONS_BY_ID, EQUIPPED_BONUS } from "../game/operations";
   import { HEROES_BY_ID, ROLE_ICON, FACTION_COLOR } from "../game/heroes";
   import { formatNumber, formatRate, formatDuration } from "../game/format";
 
@@ -71,7 +72,8 @@
             </div>
             <div class="op-bar"><div class="op-fill" style="width: {pct}%"></div></div>
             <div class="op-note mono">
-              Retorno previsto: {formatNumber(opPayout($game, def, op.heroIds, $activeBuff))} de Verba
+              Retorno previsto: {formatNumber(opPayout($game, def, op.heroIds, $activeBuff, op.equipped))} de Verba
+              {#if op.equipped}· equipada{/if}
             </div>
           </div>
         {/each}
@@ -98,7 +100,11 @@
             </div>
             <p class="op-brief">{def.brief}</p>
             <div class="op-meta mono">
-              <span>⏱ {formatDuration(def.durationMs)}</span>
+              <span>⏱ {formatDuration(opDurationMs($game, def))}</span>
+              <span class:lacking={$game.intel < def.intelCost}>🔍 {def.intelCost}</span>
+              <span class:optional={$game.equipamento < def.equipCost}>
+                🔩 {def.equipCost} → ×{EQUIPPED_BONUS}
+              </span>
               {#if def.preferredRole}
                 <span class="op-pref">
                   {ROLE_ICON[def.preferredRole] ?? "•"} equipe só de {def.preferredRole}: ×{def.roleBonus}
@@ -135,15 +141,22 @@
                   </div>
                 {/if}
                 {#if picked.length === def.slots}
+                  {@const willEquip = $game.equipamento >= def.equipCost}
                   <div class="preview mono">
-                    Retorno estimado: <strong>{formatNumber(opPayout($game, def, picked, $activeBuff))}</strong>
+                    Retorno estimado:
+                    <strong>{formatNumber(opPayout($game, def, picked, $activeBuff, willEquip))}</strong>
+                    {#if willEquip}<span class="bonus">equipe sai equipada (×{EQUIPPED_BONUS})</span>{/if}
                     {#if opRoleBonusApplies(def, picked)}<span class="bonus">bônus de especialidade ativo</span>{/if}
                   </div>
                 {/if}
                 <div class="picker-actions">
                   <button class="btn-ghost" onclick={() => (planning = null)}>Cancelar</button>
-                  <button class="send" disabled={picked.length !== def.slots} onclick={() => send(def.id)}>
-                    Destacar equipe
+                  <button
+                    class="send"
+                    disabled={picked.length !== def.slots || $game.intel < def.intelCost}
+                    onclick={() => send(def.id)}
+                  >
+                    {$game.intel < def.intelCost ? `Falta Intel (${def.intelCost})` : "Destacar equipe"}
                   </button>
                 </div>
               </div>
@@ -260,6 +273,12 @@
   }
   .op-pref {
     color: var(--sky-blue);
+  }
+  .op-meta .lacking {
+    color: var(--hero-red);
+  }
+  .op-meta .optional {
+    opacity: 0.5;
   }
   .op-note {
     font-size: 0.68rem;

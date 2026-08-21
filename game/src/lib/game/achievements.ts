@@ -39,10 +39,10 @@ const FAMA_TIERS: { id: string; name: string; amount: number; emoji: string }[] 
   { id: "fama-6", name: "Mito Interdimensional", amount: 1e18, emoji: "🌌" },
 ];
 
-const CLICK_TIERS: { id: string; name: string; amount: number; emoji: string }[] = [
-  { id: "click-a1", name: "Primeiro Expediente", amount: 50, emoji: "👆" },
-  { id: "click-a2", name: "Lesão por Esforço", amount: 500, emoji: "🤕" },
-  { id: "click-a3", name: "Denúncia Anônima", amount: 5_000, emoji: "📢" },
+const OPS_TIERS: { id: string; name: string; amount: number; emoji: string }[] = [
+  { id: "click-a1", name: "Primeiro Expediente", amount: 5, emoji: "📋" },
+  { id: "click-a2", name: "Rotina de Campo", amount: 60, emoji: "🚩" },
+  { id: "click-a3", name: "Departamento Consolidado", amount: 400, emoji: "🏛️" },
 ];
 
 export const ACHIEVEMENTS: AchievementDef[] = [
@@ -53,12 +53,12 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     emoji: t.emoji,
     check: (c: AchievementContext) => c.lifetimeVerba.gte(t.amount),
   })),
-  ...CLICK_TIERS.map((t) => ({
+  ...OPS_TIERS.map((t) => ({
     id: t.id,
     name: t.name,
-    desc: `Faça ${t.amount.toLocaleString("pt-BR")} despachos.`,
+    desc: `Conclua ${t.amount.toLocaleString("pt-BR")} operações de campo.`,
     emoji: t.emoji,
-    check: (c: AchievementContext) => c.totalDispatches >= t.amount,
+    check: (c: AchievementContext) => c.opsCompleted >= t.amount,
   })),
   {
     id: "roster-1",

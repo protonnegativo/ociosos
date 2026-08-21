@@ -4,14 +4,22 @@ import { HEROES, HEROES_BY_ID, milestoneMultiplier, type HeroDef, type Faction }
 import { threatThreshold, threatReward, threatMultiplier, threatFor } from "./threats";
 import { UPGRADES, UPGRADES_BY_ID, type UpgradeContext } from "./upgrades";
 import { PROTOCOLS_BY_ID, protocolCost, seedVerba, dossiesFor, dossiesRaw, dossieCap } from "./protocols";
-import { OPERATIONS_BY_ID, type OperationDef } from "./operations";
+import { OPERATIONS_BY_ID, EQUIPPED_BONUS, type OperationDef } from "./operations";
+import {
+  DEPARTMENTS,
+  DEPARTMENTS_BY_ID,
+  DEFAULT_DEPARTMENT,
+  intelRate,
+  equipRate,
+  type DepartmentDef,
+} from "./departments";
 import { ACHIEVEMENTS, ACHIEVEMENT_BONUS, type AchievementContext } from "./achievements";
 import { formatNumber } from "./format";
 
 export type BuyAmount = 1 | 10 | 100 | "max";
 
 export interface ActiveBuff {
-  kind: "forca" | "resposta";
+  kind: "forca";
   label: string;
   mult: number;
   until: number;
@@ -29,6 +37,8 @@ export interface ActiveOp {
   heroIds: string[];
   startedAt: number;
   endsAt: number;
+  /** Squad went out with full kit — worth EQUIPPED_BONUS on the payout. */
+  equipped: boolean;
 }
 
 export interface GameState {
@@ -39,9 +49,14 @@ export interface GameState {
   /** Never reset — drives commendations. */
   lifetimeVerba: Decimal;
   dossies: Decimal;
+  /** Non-exponential support resources produced by the departments. */
+  intel: number;
+  equipamento: number;
 
   // Roster
   levels: Record<string, number>;
+  /** heroId -> department id. Unlisted heroes fall back to patrol. */
+  assignments: Record<string, string>;
 
   // Campaign
   threat: number;
@@ -57,7 +72,7 @@ export interface GameState {
   opCooldowns: Record<string, number>;
 
   // Stats
-  totalDispatches: number;
+  totalDispatches: number; // legacy counter, no longer increments
   restructurings: number;
   alertsClaimed: number;
   opsCompleted: number;
@@ -71,8 +86,8 @@ export interface GameState {
   lastTick: number;
 }
 
-const SAVE_KEY = "ociosos-save-v4";
-const LEGACY_KEY = "ociosos-save-v3";
+const SAVE_KEY = "ociosos-save-v5";
+const LEGACY_KEYS = ["ociosos-save-v4", "ociosos-save-v3"];
 const TICK_MS = 100;
 const AUTOSAVE_MS = 5_000;
 
@@ -106,7 +121,10 @@ function freshState(): GameState {
     totalVerbaThisRun: new Decimal(0),
     lifetimeVerba: new Decimal(0),
     dossies: new Decimal(0),
+    intel: 0,
+    equipamento: 0,
     levels: freshLevels(),
+    assignments: {},
     threat: 1,
     maxThreat: 1,
     upgrades: [],
@@ -127,12 +145,15 @@ function freshState(): GameState {
 
 function serialize(s: GameState): string {
   return JSON.stringify({
-    v: 4,
+    v: 5,
     verba: s.verba.toString(),
     totalVerbaThisRun: s.totalVerbaThisRun.toString(),
     lifetimeVerba: s.lifetimeVerba.toString(),
     dossies: s.dossies.toString(),
+    intel: s.intel,
+    equipamento: s.equipamento,
     levels: s.levels,
+    assignments: s.assignments,
     threat: s.threat,
     maxThreat: s.maxThreat,
     upgrades: s.upgrades,
@@ -164,6 +185,15 @@ const LEGACY_PROTOCOL_IDS: Record<string, string> = {
   sindicato: "interdepartamental",
 };
 
+function sanitizeAssignments(raw: unknown): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (typeof raw !== "object" || !raw) return out;
+  for (const [heroId, deptId] of Object.entries(raw as Record<string, unknown>)) {
+    if (typeof deptId === "string" && deptId in DEPARTMENTS_BY_ID) out[heroId] = deptId;
+  }
+  return out;
+}
+
 function deserialize(raw: string): GameState {
   const p = JSON.parse(raw);
   const base = freshState();
@@ -190,7 +220,10 @@ function deserialize(raw: string): GameState {
     totalVerbaThisRun: new Decimal(p.totalVerbaThisRun ?? p.totalFamaThisRun ?? 0),
     lifetimeVerba: new Decimal(p.lifetimeVerba ?? p.lifetimeFama ?? 0),
     dossies: new Decimal(p.dossies ?? p.fragmentos ?? 0),
+    intel: typeof p.intel === "number" ? p.intel : 0,
+    equipamento: typeof p.equipamento === "number" ? p.equipamento : 0,
     levels,
+    assignments: sanitizeAssignments(p.assignments),
     threat: p.threat ?? p.edition ?? 1,
     maxThreat: p.maxThreat ?? p.maxEdition ?? p.threat ?? p.edition ?? 1,
     upgrades: Array.isArray(p.upgrades) ? p.upgrades.filter((u: string) => u in UPGRADES_BY_ID) : [],
@@ -211,7 +244,11 @@ function deserialize(raw: string): GameState {
 
 function loadSave(): { state: GameState; offlineMs: number } {
   if (typeof localStorage === "undefined") return { state: freshState(), offlineMs: 0 };
-  const raw = localStorage.getItem(SAVE_KEY) ?? localStorage.getItem(LEGACY_KEY);
+  let raw = localStorage.getItem(SAVE_KEY);
+  for (const key of LEGACY_KEYS) {
+    if (raw) break;
+    raw = localStorage.getItem(key);
+  }
   if (!raw) return { state: freshState(), offlineMs: 0 };
   try {
     const state = deserialize(raw);
@@ -227,6 +264,38 @@ function loadSave(): { state: GameState; offlineMs: number } {
 
 export function protocolLevel(s: GameState, id: string): number {
   return s.protocols[id] ?? 0;
+}
+
+export function assignedDepartment(s: GameState, heroId: string): string {
+  const id = s.assignments[heroId];
+  return id && id in DEPARTMENTS_BY_ID ? id : DEFAULT_DEPARTMENT;
+}
+
+export function departmentSlots(s: GameState, def: DepartmentDef): number {
+  if (def.unlimited) return Infinity;
+  return def.baseSlots + protocolLevel(s, "estrutura");
+}
+
+export function heroesInDepartment(s: GameState, deptId: string): string[] {
+  return HEROES.filter(
+    (h) => (s.levels[h.id] ?? 0) > 0 && !isDeployed(s, h.id) && assignedDepartment(s, h.id) === deptId,
+  ).map((h) => h.id);
+}
+
+export function departmentUnlocked(s: GameState, def: DepartmentDef): boolean {
+  return s.maxThreat >= def.minThreat;
+}
+
+/** Moves a hero to a post, refusing if the department is already full. */
+export function assignHero(heroId: string, deptId: string): boolean {
+  const s = get(game);
+  const def = DEPARTMENTS_BY_ID[deptId];
+  if (!def || !departmentUnlocked(s, def)) return false;
+  if ((s.levels[heroId] ?? 0) <= 0 || isDeployed(s, heroId)) return false;
+  if (assignedDepartment(s, heroId) === deptId) return true;
+  if (heroesInDepartment(s, deptId).length >= departmentSlots(s, def)) return false;
+  game.update((st) => ({ ...st, assignments: { ...st.assignments, [heroId]: deptId } }));
+  return true;
 }
 
 export function isDeployed(s: GameState, heroId: string): boolean {
@@ -246,12 +315,11 @@ export function factionSynergy(s: GameState, faction: Faction): number {
   return 1 + 0.15 * Math.max(0, recruitedInFaction(s, faction) - 1);
 }
 
-function upgradeMultFor(s: GameState, kind: "click" | "global"): number {
+function upgradeMultFor(s: GameState, kind: "global"): number {
   let mult = 1;
   for (const id of s.upgrades) {
     const u = UPGRADES_BY_ID[id];
     if (!u) continue;
-    if (kind === "click" && u.kind === "click") mult *= u.mult;
     if (kind === "global" && u.kind === "global") mult *= u.mult;
   }
   return mult;
@@ -295,10 +363,33 @@ export function heroOutputRaw(s: GameState, def: HeroDef, buff: ActiveBuff | nul
     .times(globalMultiplier(s, buff));
 }
 
-/** Deployed heroes are in the field, so they contribute nothing passively. */
+/**
+ * Verba only comes from Patrulha. A hero posted to a department is producing
+ * something else, and a deployed hero is producing nothing at all — that
+ * trade-off is what makes the posting decision matter.
+ */
 export function heroOutput(s: GameState, def: HeroDef, buff: ActiveBuff | null): Decimal {
   if (isDeployed(s, def.id)) return new Decimal(0);
+  if (assignedDepartment(s, def.id) !== DEFAULT_DEPARTMENT) return new Decimal(0);
   return heroOutputRaw(s, def, buff);
+}
+
+function departmentRate(s: GameState, deptId: string, rate: (level: number) => number): number {
+  let total = 0;
+  for (const h of HEROES) {
+    const level = s.levels[h.id] ?? 0;
+    if (level <= 0 || isDeployed(s, h.id)) continue;
+    if (assignedDepartment(s, h.id) === deptId) total += rate(level);
+  }
+  return total;
+}
+
+export function intelPerSecond(s: GameState): number {
+  return departmentRate(s, "investigacao", intelRate);
+}
+
+export function equipPerSecond(s: GameState): number {
+  return departmentRate(s, "logistica", equipRate);
 }
 
 export function totalProduction(s: GameState, buff: ActiveBuff | null): Decimal {
@@ -323,15 +414,6 @@ export function purchaseImpact(
   const before = baseTotal ?? totalProduction(s, buff);
   const next: GameState = { ...s, levels: { ...s.levels, [def.id]: level + n } };
   return totalProduction(next, buff).minus(before);
-}
-
-export function dispatchPower(s: GameState, buff: ActiveBuff | null): Decimal {
-  let p = new Decimal(1)
-    .times(upgradeMultFor(s, "click"))
-    .times(Math.pow(3, protocolLevel(s, "resposta")))
-    .times(globalMultiplier(s, buff && buff.kind === "forca" ? buff : null));
-  if (buff && buff.kind === "resposta") p = p.times(buff.mult);
-  return p;
 }
 
 export function offlineCapMs(s: GameState): number {
@@ -367,19 +449,23 @@ const { state: initialState, offlineMs } = loadSave();
 export const game = writable<GameState>(initialState);
 
 export const production = derived([game, activeBuff], ([$g, $b]) => totalProduction($g, $b));
-export const dispatchValue = derived([game, activeBuff], ([$g, $b]) => dispatchPower($g, $b));
 export const globalMult = derived([game, activeBuff], ([$g, $b]) => globalMultiplier($g, $b));
+export const intelFlow = derived(game, ($g) => intelPerSecond($g));
+export const equipFlow = derived(game, ($g) => equipPerSecond($g));
 
 if (offlineMs > 1_000) {
   const prod = totalProduction(initialState, null);
   const capped = Math.min(offlineMs, offlineCapMs(initialState));
   const gained = prod.times(capped / 1000).times(OFFLINE_RATE);
-  if (gained.gt(0)) {
+  const offSecs = capped / 1000;
+  if (gained.gt(0) || intelPerSecond(initialState) > 0 || equipPerSecond(initialState) > 0) {
     game.update((s) => ({
       ...s,
       verba: s.verba.plus(gained),
       totalVerbaThisRun: s.totalVerbaThisRun.plus(gained),
       lifetimeVerba: s.lifetimeVerba.plus(gained),
+      intel: s.intel + intelPerSecond(s) * offSecs * OFFLINE_RATE,
+      equipamento: s.equipamento + equipPerSecond(s) * offSecs * OFFLINE_RATE,
     }));
     offlineReport.set({ ms: capped, gained });
   }
@@ -394,13 +480,6 @@ function earn(s: GameState, amount: Decimal): GameState {
     totalVerbaThisRun: s.totalVerbaThisRun.plus(amount),
     lifetimeVerba: s.lifetimeVerba.plus(amount),
   };
-}
-
-export function dispatch(): Decimal {
-  const buff = get(activeBuff);
-  const power = dispatchPower(get(game), buff);
-  game.update((st) => ({ ...earn(st, power), totalDispatches: st.totalDispatches + 1 }));
-  return power;
 }
 
 export function trainHero(id: string, amount: BuyAmount = 1): void {
@@ -486,7 +565,10 @@ export function doRestructure(): void {
       verba: seedVerba(protocolLevel(s, "instalacao")),
       totalVerbaThisRun: new Decimal(0),
       dossies: s.dossies.plus(gained),
+      intel: 0,
+      equipamento: 0,
       levels,
+      assignments: {},
       threat: 1,
       upgrades: [],
       activeOps: [],
@@ -525,14 +607,25 @@ export function opRoleBonusApplies(def: OperationDef, heroIds: string[]): boolea
 }
 
 /** Payout the squad would bring back, including the matching-role bonus. */
-export function opPayout(s: GameState, def: OperationDef, heroIds: string[], buff: ActiveBuff | null): Decimal {
+export function opPayout(
+  s: GameState,
+  def: OperationDef,
+  heroIds: string[],
+  buff: ActiveBuff | null,
+  equipped = false,
+): Decimal {
   let squadRate = new Decimal(0);
   for (const id of heroIds) {
     const h = HEROES_BY_ID[id];
     if (h) squadRate = squadRate.plus(heroOutputRaw(s, h, buff));
   }
   const bonus = opRoleBonusApplies(def, heroIds) ? def.roleBonus : 1;
-  return squadRate.times(def.payoutSeconds).times(bonus);
+  return squadRate.times(def.payoutSeconds).times(bonus).times(equipped ? EQUIPPED_BONUS : 1);
+}
+
+export function opDurationMs(s: GameState, def: OperationDef): number {
+  const speed = 1 - 0.1 * protocolLevel(s, "resposta");
+  return Math.round(def.durationMs * Math.max(0.3, speed));
 }
 
 export function deployOperation(defId: string, heroIds: string[]): boolean {
@@ -541,11 +634,18 @@ export function deployOperation(defId: string, heroIds: string[]): boolean {
   if (!def || !opAvailable(s, def)) return false;
   if (heroIds.length !== def.slots) return false;
   if (heroIds.some((id) => isDeployed(s, id) || (s.levels[id] ?? 0) <= 0)) return false;
+  if (s.intel < def.intelCost) return false;
 
+  const equipped = s.equipamento >= def.equipCost;
   const now = Date.now();
   game.update((st) => ({
     ...st,
-    activeOps: [...st.activeOps, { defId, heroIds, startedAt: now, endsAt: now + def.durationMs }],
+    intel: st.intel - def.intelCost,
+    equipamento: equipped ? st.equipamento - def.equipCost : st.equipamento,
+    activeOps: [
+      ...st.activeOps,
+      { defId, heroIds, startedAt: now, endsAt: now + opDurationMs(st, def), equipped },
+    ],
   }));
   return true;
 }
@@ -559,7 +659,7 @@ function settleOperations(now: number, buff: ActiveBuff | null): void {
     if (!def) continue;
     // Priced off what the squad would have produced, so a stronger squad is
     // always the better squad to send.
-    const payout = opPayout(get(game), def, op.heroIds, buff);
+    const payout = opPayout(get(game), def, op.heroIds, buff, op.equipped);
     game.update((st) => ({
       ...earn(st, payout),
       activeOps: st.activeOps.filter((o) => o !== op),
@@ -602,7 +702,7 @@ export function claimAlerta(): void {
   const durationScale = 1 + 0.25 * protocolLevel(s, "escuta");
   const roll = Math.random();
 
-  if (roll < 0.45) {
+  if (roll < 0.6) {
     activeBuff.set({
       kind: "forca",
       label: "Força-tarefa ×7",
@@ -610,14 +710,6 @@ export function claimAlerta(): void {
       until: Date.now() + 60_000 * durationScale,
     });
     pushToast("Força-tarefa mobilizada: produção ×7 por 60s", "gold");
-  } else if (roll < 0.7) {
-    activeBuff.set({
-      kind: "resposta",
-      label: "Prontidão total ×500",
-      mult: 500,
-      until: Date.now() + 15_000 * durationScale,
-    });
-    pushToast("Prontidão total: despachos ×500 por 15s", "red");
   } else {
     const lump = totalProduction(s, null).times(900).max(new Decimal(50));
     game.update((st) => earn(st, lump));
@@ -721,7 +813,7 @@ export function importSave(encoded: string): boolean {
 export function resetSave(): void {
   if (typeof localStorage !== "undefined") {
     localStorage.removeItem(SAVE_KEY);
-    localStorage.removeItem(LEGACY_KEY);
+    for (const key of LEGACY_KEYS) localStorage.removeItem(key);
   }
   game.set(freshState());
   activeBuff.set(null);
@@ -763,6 +855,10 @@ export function debugAddVerba(delta: string | number): void {
   });
 }
 
+export function debugAddSupport(n: number): void {
+  game.update((s) => ({ ...s, intel: s.intel + n, equipamento: s.equipamento + n }));
+}
+
 export function debugAddDossies(n: number): void {
   game.update((s) => ({ ...s, dossies: s.dossies.plus(n) }));
 }
@@ -788,8 +884,14 @@ export function startLoop(): void {
     const liveBuff = get(activeBuff);
 
     game.update((s) => {
-      const gained = totalProduction(s, liveBuff).times(TICK_MS / 1000);
-      return { ...earn(s, gained), lastTick: now };
+      const secs = TICK_MS / 1000;
+      const gained = totalProduction(s, liveBuff).times(secs);
+      return {
+        ...earn(s, gained),
+        intel: s.intel + intelPerSecond(s) * secs,
+        equipamento: s.equipamento + equipPerSecond(s) * secs,
+        lastTick: now,
+      };
     });
 
     settleOperations(now, liveBuff);

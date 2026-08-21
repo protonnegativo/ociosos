@@ -1,6 +1,6 @@
 import { HEROES } from "./heroes";
 
-export type UpgradeKind = "click" | "hero" | "global";
+export type UpgradeKind = "hero" | "global";
 
 export interface UpgradeContext {
   levels: Record<string, number>;
@@ -25,50 +25,50 @@ export interface UpgradeDef {
 // Bought with Fama, wiped on every Reboot — these are the *inside a run*
 // power spikes that keep the mid-game from being a flat climb.
 
-const CLICK_UPGRADES: UpgradeDef[] = [
+const PATROL_UPGRADES: UpgradeDef[] = [
   {
     id: "click-1",
-    name: "Linha Direta",
-    desc: "Cada despacho rende o dobro.",
-    kind: "click",
-    cost: 120,
-    mult: 2,
-    emoji: "👆",
-    reqText: "10 despachos",
-    unlocked: (c) => c.totalDispatches >= 10,
+    name: "Escala de Turnos",
+    desc: "Todo o efetivo produz 1,3x mais. Ninguém mais cobre dois turnos seguidos.",
+    kind: "global",
+    cost: 400,
+    mult: 1.3,
+    emoji: "🗓️",
+    reqText: "Disponível de saída",
+    unlocked: () => true,
   },
   {
     id: "click-2",
-    name: "Canal Prioritário",
-    desc: "Cada despacho rende 3x mais.",
-    kind: "click",
-    cost: 9_000,
-    mult: 3,
-    emoji: "🥊",
-    reqText: "120 despachos",
-    unlocked: (c) => c.totalDispatches >= 120,
+    name: "Rádio Compartilhado",
+    desc: "Todo o efetivo produz 1,5x mais. A frequência é só uma, mas funciona.",
+    kind: "global",
+    cost: 18_000,
+    mult: 1.5,
+    emoji: "📻",
+    reqText: "Ameaça 2",
+    unlocked: (c) => c.threat >= 2,
   },
   {
     id: "click-3",
-    name: "Despacho Patrocinado",
-    desc: "Cada despacho rende 5x mais. O logo do patrocinador é inegociável.",
-    kind: "click",
-    cost: 1_200_000,
-    mult: 5,
-    emoji: "💥",
-    reqText: "600 despachos",
-    unlocked: (c) => c.totalDispatches >= 600,
+    name: "Mapeamento de Setores",
+    desc: "Todo o efetivo produz 1,8x mais. Agora se sabe onde ninguém está patrulhando.",
+    kind: "global",
+    cost: 900_000,
+    mult: 1.8,
+    emoji: "🗺️",
+    reqText: "Ameaça 4",
+    unlocked: (c) => c.threat >= 4,
   },
   {
     id: "click-4",
-    name: "Rede Interdimensional",
-    desc: "Cada despacho rende 10x mais. Em todas as realidades, o expediente é o mesmo.",
-    kind: "click",
-    cost: 900_000_000,
-    mult: 10,
-    emoji: "🌌",
-    reqText: "2.000 despachos",
-    unlocked: (c) => c.totalDispatches >= 2_000,
+    name: "Central de Despacho",
+    desc: "Todo o efetivo produz 2,2x mais. Alguém finalmente coordena as chamadas.",
+    kind: "global",
+    cost: 40_000_000,
+    mult: 2.2,
+    emoji: "🎚️",
+    reqText: "Ameaça 8",
+    unlocked: (c) => c.threat >= 8,
   },
 ];
 
@@ -158,6 +158,6 @@ const HERO_UPGRADES: UpgradeDef[] = HEROES.flatMap((h) => [
   },
 ]);
 
-export const UPGRADES: UpgradeDef[] = [...CLICK_UPGRADES, ...GLOBAL_UPGRADES, ...HERO_UPGRADES];
+export const UPGRADES: UpgradeDef[] = [...PATROL_UPGRADES, ...GLOBAL_UPGRADES, ...HERO_UPGRADES];
 
 export const UPGRADES_BY_ID: Record<string, UpgradeDef> = Object.fromEntries(UPGRADES.map((u) => [u.id, u]));

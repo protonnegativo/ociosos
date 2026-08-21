@@ -2,7 +2,8 @@
   import {
     game,
     production,
-    dispatchValue,
+    intelPerSecond,
+    equipPerSecond,
     globalMult,
     activeBuff,
     totalRecruited,
@@ -50,7 +51,8 @@
   let rows = $derived([
     { k: "Verba agora", v: formatNumber($game.verba) },
     { k: "Produção", v: formatRate($production) },
-    { k: "Valor do despacho", v: formatNumber($dispatchValue) },
+    { k: "Intel", v: `${Math.floor($game.intel)} (+${intelPerSecond($game).toFixed(2)}/s)` },
+    { k: "Equipamento", v: `${Math.floor($game.equipamento)} (+${equipPerSecond($game).toFixed(2)}/s)` },
     { k: "Verba nesta administração", v: formatNumber($game.totalVerbaThisRun) },
     { k: "Verba desde sempre", v: formatNumber($game.lifetimeVerba) },
     { k: "Dossiês", v: formatNumber($game.dossies, 0) },
@@ -61,7 +63,6 @@
     { k: "Operações concluídas", v: String($game.opsCompleted) },
     { k: "Melhorias vigentes", v: String($game.upgrades.length) },
     { k: "Condecorações", v: String($game.achievements.length) },
-    { k: "Despachos totais", v: $game.totalDispatches.toLocaleString("pt-BR") },
     { k: "Alertas atendidos", v: String($game.alertsClaimed) },
     { k: "Reestruturações", v: String($game.restructurings) },
     { k: "Tempo desta administração", v: formatDuration(runTime) },
