@@ -18,6 +18,10 @@
     markTabSeen,
     totalRecruited,
     heroesInDepartment,
+    tutorialActive,
+    currentTutorialStep,
+    tutorialContext,
+    skipTutorial,
     pendingDossies,
     currentDossieCap,
     dossieProgress,
@@ -34,6 +38,7 @@
   import { threatThreshold, threatFor } from "./lib/game/threats";
   import { OPERATIONS } from "./lib/game/operations";
   import { currentObjective } from "./lib/game/objectives";
+  import { TUTORIAL_TOTAL, rewardText } from "./lib/game/tutorial";
   import { formatNumber, formatRate, formatDuration } from "./lib/game/format";
   import HeroesTab from "./lib/ui/HeroesTab.svelte";
   import UpgradesTab from "./lib/ui/UpgradesTab.svelte";
@@ -127,6 +132,12 @@
     if (!tabUnlocked($game, tab)) tab = "efetivo";
   });
 
+  let tutorial = $derived(currentTutorialStep($game));
+  let tutorialProgress = $derived.by(() => {
+    if (!tutorial?.progress) return null;
+    return tutorial.progress(tutorialContext($game));
+  });
+
   let objective = $derived(
     currentObjective($game, $production, totalRecruited($game), heroesInDepartment($game, "investigacao").length),
   );
@@ -216,12 +227,39 @@
     </aside>
 
     <main class="main">
-      <button class="objective" onclick={() => openTab(objective.tab as TabId)}>
-        <span class="obj-label label">Próximo passo</span>
-        <span class="obj-text">{objective.text}</span>
-        <span class="obj-bar"><span class="obj-fill" style="width: {objectivePct}%"></span></span>
-        <span class="obj-count mono">{objective.current}/{objective.target}</span>
-      </button>
+      {#if tutorialActive($game) && tutorial}
+        {@const pct = tutorialProgress && tutorialProgress.target > 0
+          ? Math.min(100, (tutorialProgress.current / tutorialProgress.target) * 100)
+          : 0}
+        <section class="tutorial">
+          <div class="tut-top">
+            <span class="tut-label label">Treinamento · etapa {$game.tutorialStep + 1} de {TUTORIAL_TOTAL}</span>
+            <button class="tut-skip" onclick={skipTutorial}>pular</button>
+          </div>
+          <button class="tut-task" onclick={() => openTab(tutorial.tab as TabId)}>
+            <span class="tut-title">{tutorial.title}</span>
+            <span class="tut-reward mono">recompensa: {rewardText(tutorial.reward)}</span>
+          </button>
+          <div class="tut-bar">
+            <div class="tut-fill" style="width: {pct}%"></div>
+          </div>
+          <div class="tut-steps">
+            {#each Array(TUTORIAL_TOTAL) as _, i (i)}
+              <span class="tut-pip" class:done={i < $game.tutorialStep} class:now={i === $game.tutorialStep}></span>
+            {/each}
+            {#if tutorialProgress}
+              <span class="tut-count mono">{tutorialProgress.current}/{tutorialProgress.target}</span>
+            {/if}
+          </div>
+        </section>
+      {:else}
+        <button class="objective" onclick={() => openTab(objective.tab as TabId)}>
+          <span class="obj-label label">Próximo passo</span>
+          <span class="obj-text">{objective.text}</span>
+          <span class="obj-bar"><span class="obj-fill" style="width: {objectivePct}%"></span></span>
+          <span class="obj-count mono">{objective.current}/{objective.target}</span>
+        </button>
+      {/if}
 
       <nav class="tabs">
         {#each tabs as t (t.id)}
@@ -590,6 +628,92 @@
 
   .main {
     min-width: 0;
+  }
+
+  .tutorial {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    background: color-mix(in srgb, var(--power-gold) 12%, var(--panel));
+    border: 1px solid color-mix(in srgb, var(--power-gold) 50%, transparent);
+    border-radius: 10px;
+    padding: 0.6rem 0.8rem;
+    margin-bottom: 0.8rem;
+  }
+  .tut-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .tut-label {
+    font-size: 0.64rem;
+    color: var(--power-gold);
+  }
+  .tut-skip {
+    background: none;
+    border: none;
+    color: var(--text-faint);
+    font-size: 0.66rem;
+    text-decoration: underline;
+    padding: 0;
+  }
+  .tut-skip:hover {
+    color: var(--text-soft);
+  }
+  .tut-task {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
+    background: none;
+    border: none;
+    padding: 0;
+    text-align: left;
+    color: var(--paper);
+  }
+  .tut-title {
+    font-size: 0.92rem;
+  }
+  .tut-task:hover .tut-title {
+    text-decoration: underline;
+  }
+  .tut-reward {
+    font-size: 0.68rem;
+    color: var(--gain-green);
+  }
+  .tut-bar {
+    height: 5px;
+    border-radius: 999px;
+    background: var(--ink);
+    overflow: hidden;
+  }
+  .tut-fill {
+    height: 100%;
+    background: var(--power-gold);
+    transition: width 0.4s ease-out;
+  }
+  .tut-steps {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  .tut-pip {
+    width: 100%;
+    max-width: 1.4rem;
+    height: 3px;
+    border-radius: 999px;
+    background: var(--rule);
+  }
+  .tut-pip.done {
+    background: var(--gain-green);
+  }
+  .tut-pip.now {
+    background: var(--power-gold);
+  }
+  .tut-count {
+    margin-left: auto;
+    font-size: 0.66rem;
+    color: var(--text-faint);
   }
 
   .objective {

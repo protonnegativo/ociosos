@@ -14,6 +14,7 @@ import {
   type DepartmentDef,
 } from "./departments";
 import { ACHIEVEMENTS, ACHIEVEMENT_BONUS, type AchievementContext } from "./achievements";
+import { TUTORIAL, TUTORIAL_TOTAL, rewardText, type TutorialContext } from "./tutorial";
 import { formatNumber } from "./format";
 
 export type BuyAmount = 1 | 10 | 100 | "max";
@@ -78,6 +79,8 @@ export interface GameState {
 
   /** Tabs the player has already opened — drives the "novo" marker. */
   seenTabs: string[];
+  /** Index into TUTORIAL; equal to the length once finished or skipped. */
+  tutorialStep: number;
 
   // Settings
   autoTrain: boolean;
@@ -151,6 +154,7 @@ function freshState(): GameState {
     opsCompleted: 0,
     runStart: Date.now(),
     seenTabs: [],
+    tutorialStep: 0,
     autoTrain: false,
     autoSpendFraction: 0.5,
     lastTick: Date.now(),
@@ -181,6 +185,7 @@ function serialize(s: GameState): string {
     opsCompleted: s.opsCompleted,
     runStart: s.runStart,
     seenTabs: s.seenTabs,
+    tutorialStep: s.tutorialStep,
     autoTrain: s.autoTrain,
     autoSpendFraction: s.autoSpendFraction,
     lastTick: Date.now(),
@@ -252,6 +257,9 @@ function deserialize(raw: string): GameState {
     opsCompleted: p.opsCompleted ?? 0,
     runStart: p.runStart ?? base.runStart,
     seenTabs: Array.isArray(p.seenTabs) ? p.seenTabs : [],
+    // Saves from before the tutorial existed skip it: those players already
+    // know the loop, and replaying step one would be nonsense.
+    tutorialStep: typeof p.tutorialStep === "number" ? p.tutorialStep : p.v ? TUTORIAL_TOTAL : 0,
     autoTrain: !!p.autoTrain,
     autoSpendFraction: typeof p.autoSpendFraction === "number" ? p.autoSpendFraction : 0.5,
     lastTick: typeof p.lastTick === "number" ? p.lastTick : Date.now(),
@@ -825,6 +833,61 @@ function checkAchievements(): void {
   if (first) pushToast(`Condecoração — ${first.emoji} ${first.name}`, "gold");
 }
 
+// --- Tutorial -------------------------------------------------------------
+
+export function tutorialContext(s: GameState): TutorialContext {
+  return {
+    recruited: totalRecruited(s),
+    maxLevel: Math.max(0, ...HEROES.map((h) => s.levels[h.id] ?? 0)),
+    investigating: heroesInDepartment(s, "investigacao").length,
+    intel: s.intel,
+    equipamento: s.equipamento,
+    opsCompleted: s.opsCompleted,
+    activeOps: s.activeOps.length,
+    maxThreat: s.maxThreat,
+    upgrades: s.upgrades.length,
+  };
+}
+
+export function tutorialActive(s: GameState): boolean {
+  return s.tutorialStep < TUTORIAL_TOTAL;
+}
+
+export function currentTutorialStep(s: GameState) {
+  return tutorialActive(s) ? TUTORIAL[s.tutorialStep] : null;
+}
+
+export function skipTutorial(): void {
+  game.update((s) => ({ ...s, tutorialStep: TUTORIAL_TOTAL }));
+  pushToast("Tutorial dispensado", "gold");
+}
+
+function checkTutorial(): void {
+  const s = get(game);
+  if (!tutorialActive(s)) return;
+  const step = TUTORIAL[s.tutorialStep];
+  if (!step.done(tutorialContext(s))) return;
+
+  const r = step.reward;
+  game.update((st) => {
+    const withVerba = r.verba ? earn(st, new Decimal(r.verba)) : st;
+    return {
+      ...withVerba,
+      intel: withVerba.intel + (r.intel ?? 0),
+      equipamento: withVerba.equipamento + (r.equipamento ?? 0),
+      tutorialStep: st.tutorialStep + 1,
+    };
+  });
+
+  const done = get(game).tutorialStep >= TUTORIAL_TOTAL;
+  pushToast(
+    done
+      ? "Tutorial concluído — a agência é sua"
+      : `Etapa ${s.tutorialStep + 1}/${TUTORIAL_TOTAL} · +${rewardText(r)}`,
+    "green",
+  );
+}
+
 // --- Threat ladder --------------------------------------------------------
 
 function checkThreat(buff: ActiveBuff | null): void {
@@ -964,6 +1027,7 @@ export function startLoop(): void {
     }
 
     checkThreat(liveBuff);
+    checkTutorial();
     checkAchievements();
   }, TICK_MS);
 
