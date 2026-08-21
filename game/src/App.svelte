@@ -16,6 +16,8 @@
     canRestructure,
     tabUnlocked,
     markTabSeen,
+    totalRecruited,
+    heroesInDepartment,
     pendingDossies,
     currentDossieCap,
     dossieProgress,
@@ -31,6 +33,7 @@
   } from "./lib/game/state";
   import { threatThreshold, threatFor } from "./lib/game/threats";
   import { OPERATIONS } from "./lib/game/operations";
+  import { currentObjective } from "./lib/game/objectives";
   import { formatNumber, formatRate, formatDuration } from "./lib/game/format";
   import HeroesTab from "./lib/ui/HeroesTab.svelte";
   import UpgradesTab from "./lib/ui/UpgradesTab.svelte";
@@ -62,7 +65,7 @@
   $effect(() => {
     if ($threatEvent) {
       showThreat = true;
-      const timer = setTimeout(() => (showThreat = false), 4200);
+      const timer = setTimeout(() => (showThreat = false), 3000);
       return () => clearTimeout(timer);
     }
   });
@@ -123,6 +126,13 @@
   $effect(() => {
     if (!tabUnlocked($game, tab)) tab = "efetivo";
   });
+
+  let objective = $derived(
+    currentObjective($game, $production, totalRecruited($game), heroesInDepartment($game, "investigacao").length),
+  );
+  let objectivePct = $derived(
+    objective.target > 0 ? Math.min(100, (objective.current / objective.target) * 100) : 0,
+  );
 
   // Debug drawer
   let debugOpen = $state(false);
@@ -206,6 +216,13 @@
     </aside>
 
     <main class="main">
+      <button class="objective" onclick={() => openTab(objective.tab as TabId)}>
+        <span class="obj-label label">Próximo passo</span>
+        <span class="obj-text">{objective.text}</span>
+        <span class="obj-bar"><span class="obj-fill" style="width: {objectivePct}%"></span></span>
+        <span class="obj-count mono">{objective.current}/{objective.target}</span>
+      </button>
+
       <nav class="tabs">
         {#each tabs as t (t.id)}
           <button class="tab" class:active={tab === t.id} onclick={() => openTab(t.id)}>
@@ -246,8 +263,12 @@
 </div>
 
 {#if $alerta}
-  <button class="manchete" style="left: {$alerta.x}%; top: {$alerta.y}%" onclick={claimAlerta} title="Alerta Prioritário">
-    🚨
+  <button class="alerta-dock" onclick={claimAlerta}>
+    <span class="alerta-icon">🚨</span>
+    <span class="alerta-text">
+      <span class="alerta-title label">Alerta Prioritário</span>
+      <span class="alerta-sub">clique para atender</span>
+    </span>
   </button>
 {/if}
 
@@ -571,6 +592,54 @@
     min-width: 0;
   }
 
+  .objective {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas:
+      "label text count"
+      "bar bar bar";
+    align-items: center;
+    gap: 0.3rem 0.6rem;
+    width: 100%;
+    text-align: left;
+    background: color-mix(in srgb, var(--sky-blue) 12%, var(--panel));
+    border: 1px solid color-mix(in srgb, var(--sky-blue) 45%, transparent);
+    border-radius: 10px;
+    padding: 0.55rem 0.8rem;
+    margin-bottom: 0.8rem;
+    color: var(--paper);
+  }
+  .objective:hover {
+    border-color: var(--sky-blue);
+  }
+  .obj-label {
+    grid-area: label;
+    font-size: 0.6rem;
+    color: var(--sky-blue);
+  }
+  .obj-text {
+    grid-area: text;
+    font-size: 0.86rem;
+  }
+  .obj-count {
+    grid-area: count;
+    font-size: 0.7rem;
+    color: var(--text-faint);
+  }
+  .obj-bar {
+    grid-area: bar;
+    height: 5px;
+    border-radius: 999px;
+    background: var(--ink);
+    overflow: hidden;
+  }
+  .obj-fill {
+    display: block;
+    height: 100%;
+    background: var(--sky-blue);
+    transition: width 0.4s ease-out;
+  }
+
   .tabs {
     display: flex;
     flex-wrap: wrap;
@@ -658,42 +727,73 @@
     margin: 0;
   }
 
-  /* Manchete Quente — the click-me event */
-  .manchete {
+  /* Priority alert — docked, never overlapping the play area */
+  .alerta-dock {
     position: fixed;
+    left: 1rem;
+    bottom: 1rem;
     z-index: 40;
-    background: none;
-    border: none;
-    font-size: 2.6rem;
-    filter: drop-shadow(0 0 12px var(--power-gold));
-    animation: wobble 1.1s ease-in-out infinite;
-    padding: 0.3rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: color-mix(in srgb, var(--power-gold) 22%, var(--panel));
+    border: 2px solid var(--power-gold);
+    border-radius: 12px;
+    padding: 0.6rem 0.9rem;
+    color: var(--paper);
+    box-shadow: 0 6px 20px color-mix(in srgb, var(--ink) 70%, transparent);
+    animation: alerta-pulse 1.4s ease-in-out infinite;
   }
-  .manchete:hover {
-    transform: scale(1.15);
+  .alerta-dock:hover {
+    background: color-mix(in srgb, var(--power-gold) 34%, var(--panel));
   }
-  @keyframes wobble {
+  .alerta-icon {
+    font-size: 1.6rem;
+    line-height: 1;
+  }
+  .alerta-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 1.2;
+  }
+  .alerta-title {
+    font-size: 0.72rem;
+    color: var(--power-gold);
+  }
+  .alerta-sub {
+    font-size: 0.64rem;
+    color: var(--text-soft);
+  }
+  @keyframes alerta-pulse {
     0%,
     100% {
-      transform: rotate(-7deg) scale(1);
+      box-shadow: 0 6px 20px color-mix(in srgb, var(--ink) 70%, transparent);
     }
     50% {
-      transform: rotate(7deg) scale(1.08);
+      box-shadow:
+        0 6px 20px color-mix(in srgb, var(--ink) 70%, transparent),
+        0 0 0 6px color-mix(in srgb, var(--power-gold) 22%, transparent);
     }
   }
 
   .toast-stack {
     position: fixed;
-    top: 1rem;
-    left: 50%;
-    transform: translateX(-50%);
+    bottom: 1rem;
+    right: 1rem;
     z-index: 45;
-    width: min(460px, 92vw);
+    width: min(380px, 90vw);
     display: flex;
-    flex-direction: column;
+    flex-direction: column-reverse;
     gap: 0.5rem;
+    /* Never intercept a click meant for the game underneath. */
+    pointer-events: none;
+  }
+  .toast-stack :global(button) {
+    pointer-events: auto;
   }
   .toast {
+    animation: toast-in 0.18s ease-out;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -707,6 +807,16 @@
   }
   .toast p {
     margin: 0;
+  }
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
   .toast.red {
     background: color-mix(in srgb, var(--hero-red) 22%, var(--panel));

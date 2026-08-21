@@ -10,17 +10,11 @@
     factionSynergy,
     purchaseImpact,
     isDeployed,
-    assignedDepartment,
-    assignHero,
-    departmentSlots,
-    heroesInDepartment,
-    departmentUnlocked,
-    totalRecruited,
     type BuyAmount,
   } from "../game/state";
   import { activeBuff } from "../game/state";
   import { HEROES, FACTION_COLOR, ROLE_ICON, milestoneMultiplier, nextMilestone } from "../game/heroes";
-  import { DEPARTMENTS, DEPARTMENTS_BY_ID } from "../game/departments";
+  import DepartmentBoard from "./DepartmentBoard.svelte";
   import { formatNumber, formatRate, timeToAfford } from "../game/format";
 
   let { buyAmount }: { buyAmount: BuyAmount } = $props();
@@ -47,7 +41,6 @@
         level,
         recruited: level > 0,
         deployed: isDeployed($game, def.id),
-        dept: assignedDepartment($game, def.id),
         buyCount: n,
         shownCount: shown,
         cost,
@@ -62,48 +55,12 @@
     }),
   );
 
-  // Post occupancy drives which chips are still clickable.
-  let posts = $derived(
-    DEPARTMENTS.map((d) => ({
-      def: d,
-      unlocked: departmentUnlocked($game, d),
-      used: heroesInDepartment($game, d.id).length,
-      slots: departmentSlots($game, d),
-    })),
-  );
 
-  // One line telling the player what the game wants from them next. Without it
-  // the Intel gate is invisible and the first operation never happens.
-  let hint = $derived.by(() => {
-    const enlisted = totalRecruited($game);
-    if (enlisted === 0) return "Aliste o primeiro herói — o alistamento dele é gratuito.";
-    if (enlisted < 2) return "Aliste um segundo herói para abrir o departamento de Investigação.";
-    const investigating = heroesInDepartment($game, "investigacao").length;
-    if (investigating === 0 && $game.intel < 5)
-      return "Designe alguém para a Investigação: sem Intel, nenhuma operação de campo sai do papel.";
-    if ($game.intel >= 5 && $game.opsCompleted === 0)
-      return "Você já tem Intel suficiente — monte uma equipe na aba Operações.";
-    return null;
-  });
-
-  function postFull(deptId: string): boolean {
-    const p = posts.find((x) => x.def.id === deptId);
-    return !!p && p.used >= p.slots;
-  }
 </script>
 
-{#if hint}
-  <p class="hint">{hint}</p>
-{/if}
+<DepartmentBoard />
 
-<div class="posts-bar">
-  {#each posts.filter((p) => p.unlocked) as p (p.def.id)}
-    <span class="post-tag" class:full={!p.def.unlimited && p.used >= p.slots} title={p.def.desc}>
-      {p.def.emoji} {p.def.name}
-      <strong>{p.def.unlimited ? p.used : `${p.used}/${p.slots}`}</strong>
-    </span>
-  {/each}
-</div>
+<h3 class="roster-head label">Efetivo — alistar e treinar</h3>
 
 <div class="roster">
   {#each rows as row (row.def.id)}
@@ -139,7 +96,10 @@
         </button>
 
         <div class="hero-chips">
-          {#if row.recruited}
+          {#if row.deployed}
+            <span class="chip chip-cyan">🎯 em campo</span>
+            <span class="chip chip-gold">NV {row.level}</span>
+          {:else if row.recruited}
             <span class="chip chip-gold">NV {row.level}</span>
             <span class="chip chip-green">▲ {formatRate(row.output)}</span>
             {#if row.milestone > 1}
@@ -152,29 +112,6 @@
             <span class="chip chip-muted">🔒 não alistado</span>
           {/if}
         </div>
-
-        {#if row.recruited}
-          <div class="assign">
-            {#if row.deployed}
-              <span class="assign-field">🎯 em operação</span>
-            {:else}
-              {#each posts as p (p.def.id)}
-                {#if p.unlocked}
-                  {@const active = row.dept === p.def.id}
-                  <button
-                    class="assign-btn"
-                    class:active
-                    disabled={!active && postFull(p.def.id)}
-                    title={p.def.desc}
-                    onclick={() => assignHero(row.def.id, p.def.id)}
-                  >
-                    {p.def.emoji} {p.def.name}
-                  </button>
-                {/if}
-              {/each}
-            {/if}
-          </div>
-        {/if}
 
         {#if row.recruited && row.next}
           <div class="milestone-hint mono">
@@ -315,85 +252,14 @@
     gap: 0.3rem;
     margin-top: 0.15rem;
   }
-  .hint {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    font-size: 0.8rem;
-    color: var(--sky-blue);
-    background: color-mix(in srgb, var(--sky-blue) 12%, transparent);
-    border: 1px solid color-mix(in srgb, var(--sky-blue) 40%, transparent);
-    border-radius: 8px;
-    padding: 0.5rem 0.75rem;
-    margin: 0 0 0.7rem;
-  }
 
-  .posts-bar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin-bottom: 0.7rem;
-  }
-  .post-tag {
-    font-family: "Barlow Condensed", sans-serif;
-    font-size: 0.72rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-soft);
-    background: var(--panel);
-    border: 1px solid var(--rule);
-    border-radius: 20px;
-    padding: 0.2rem 0.65rem;
-  }
-  .post-tag strong {
-    color: var(--sky-blue);
-    margin-left: 0.15rem;
-  }
-  .post-tag.full strong {
-    color: var(--power-gold);
-  }
 
-  .assign {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem;
-    margin-top: 0.35rem;
-  }
-  .assign-btn {
-    font-family: "Barlow Condensed", sans-serif;
-    font-size: 0.64rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    background: transparent;
-    border: 1px solid var(--rule);
+
+  .roster-head {
+    font-size: 0.75rem;
     color: var(--text-faint);
-    border-radius: 20px;
-    padding: 0.1rem 0.5rem;
+    margin: 0 0 0.6rem;
   }
-  .assign-btn:hover:not(:disabled) {
-    border-color: var(--sky-blue);
-    color: var(--sky-blue);
-  }
-  .assign-btn.active {
-    background: color-mix(in srgb, var(--sky-blue) 22%, transparent);
-    border-color: var(--sky-blue);
-    color: var(--sky-blue);
-  }
-  .assign-btn:disabled {
-    opacity: 0.35;
-    cursor: not-allowed;
-  }
-  .assign-field {
-    font-family: "Barlow Condensed", sans-serif;
-    font-size: 0.64rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--gain-green);
-    border: 1px solid var(--gain-green-ink);
-    border-radius: 20px;
-    padding: 0.1rem 0.5rem;
-  }
-
   .milestone-hint {
     font-size: 0.64rem;
     color: var(--fragment-cyan);

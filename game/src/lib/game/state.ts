@@ -27,8 +27,6 @@ export interface ActiveBuff {
 
 export interface Alerta {
   id: number;
-  x: number;
-  y: number;
   expiresAt: number;
 }
 
@@ -734,7 +732,7 @@ function settleOperations(now: number, buff: ActiveBuff | null): void {
 
 const ALERTA_MIN_MS = 120_000;
 const ALERTA_MAX_MS = 300_000;
-const ALERTA_LIFETIME_MS = 13_000;
+const ALERTA_LIFETIME_MS = 25_000;
 
 let nextAlertaAt = Date.now() + ALERTA_MIN_MS;
 let alertaId = 0;
@@ -746,12 +744,7 @@ function scheduleAlerta(s: GameState): void {
 }
 
 function spawnAlerta(): void {
-  alerta.set({
-    id: alertaId++,
-    x: 12 + Math.random() * 70,
-    y: 15 + Math.random() * 65,
-    expiresAt: Date.now() + ALERTA_LIFETIME_MS,
-  });
+  alerta.set({ id: alertaId++, expiresAt: Date.now() + ALERTA_LIFETIME_MS });
 }
 
 export function claimAlerta(): void {
