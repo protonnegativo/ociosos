@@ -8,7 +8,9 @@ export interface HeroDef {
   rarity: 1 | 2 | 3 | 4 | 5;
   role: string;
   emoji: string;
-  /** Fama cost to recruit at level 1; also the base for every level-up after. */
+  /** First enlistment is on the house — the opening move shouldn't be a wait. */
+  freeRecruit?: boolean;
+  /** Cost to recruit at level 1; also the base for every level-up after. */
   recruitCost: number;
   /** Per-level cost growth — same exponential curve as the design doc's tier table. */
   costRate: number;
@@ -27,6 +29,7 @@ export const HEROES: HeroDef[] = [
     rarity: 1,
     role: "Utilidade",
     emoji: "🪳",
+    freeRecruit: true,
     recruitCost: 15,
     costRate: 1.1,
     baseProduction: 0.8,

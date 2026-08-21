@@ -169,7 +169,7 @@
           {row.recruited ? "Treinar" : "Alistar"}
           {#if row.buyCount > 1}<span class="qty">×{row.buyCount}</span>{/if}
         </span>
-        <span class="mono cost">{formatNumber(row.cost, 0)}</span>
+        <span class="mono cost">{row.cost.lte(0) ? "grátis" : formatNumber(row.cost, 0)}</span>
         <span class="mono gain">↗ +{formatRate(row.buyGain)}</span>
         {#if !row.affordable && row.wait}
           <span class="mono wait">em {row.wait}</span>

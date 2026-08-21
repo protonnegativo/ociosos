@@ -430,16 +430,31 @@ export function offlineCapMs(s: GameState): number {
 
 // --- Costs ----------------------------------------------------------------
 
+function firstIsFree(def: HeroDef, level: number): boolean {
+  return level === 0 && !!def.freeRecruit;
+}
+
 export function heroCost(def: HeroDef, level: number): Decimal {
+  if (firstIsFree(def, level)) return new Decimal(0);
   return new Decimal(def.recruitCost).times(Decimal.pow(def.costRate, level)).ceil();
 }
 
 export function heroCostBulk(def: HeroDef, level: number, n: number): Decimal {
   if (n <= 0) return new Decimal(0);
+  // The free enlistment covers level 0 only; everything above it is priced
+  // from level 1 as usual.
+  if (firstIsFree(def, level)) {
+    if (n === 1) return new Decimal(0);
+    return Decimal.sumGeometricSeries(n - 1, def.recruitCost, def.costRate, 1).ceil();
+  }
   return Decimal.sumGeometricSeries(n, def.recruitCost, def.costRate, level).ceil();
 }
 
 export function maxAffordableLevels(def: HeroDef, level: number, verba: Decimal): number {
+  if (firstIsFree(def, level)) {
+    const rest = Decimal.affordGeometricSeries(verba, def.recruitCost, def.costRate, 1).toNumber();
+    return 1 + Math.max(0, Math.floor(rest));
+  }
   const n = Decimal.affordGeometricSeries(verba, def.recruitCost, def.costRate, level).toNumber();
   return Math.max(0, Math.floor(n));
 }
