@@ -91,6 +91,14 @@ const LEGACY_KEYS = ["ociosos-save-v4", "ociosos-save-v3"];
 const TICK_MS = 100;
 const AUTOSAVE_MS = 5_000;
 
+/**
+ * The agency's baseline budget. Without it a fresh save has zero heroes, zero
+ * production and no way to ever afford the first one — the game simply never
+ * starts. Deliberately flat and unscaled, so it bootstraps the opening minutes
+ * and then fades into irrelevance instead of compounding forever.
+ */
+export const BASE_VERBA_PER_SECOND = 3;
+
 const OFFLINE_RATE = 0.7;
 const BASE_OFFLINE_CAP_H = 12;
 
@@ -393,7 +401,7 @@ export function equipPerSecond(s: GameState): number {
 }
 
 export function totalProduction(s: GameState, buff: ActiveBuff | null): Decimal {
-  let total = new Decimal(0);
+  let total = new Decimal(BASE_VERBA_PER_SECOND);
   for (const h of HEROES) total = total.plus(heroOutput(s, h, buff));
   return total;
 }
