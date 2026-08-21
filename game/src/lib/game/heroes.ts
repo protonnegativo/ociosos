@@ -32,7 +32,9 @@ export const HEROES: HeroDef[] = [
     freeRecruit: true,
     recruitCost: 15,
     costRate: 1.1,
-    baseProduction: 0.8,
+    // Front-loaded on purpose: with no agency income, this hero alone carries
+    // the opening minute, so it has to give the player something to spend.
+    baseProduction: 3,
   },
   {
     id: "torneco",

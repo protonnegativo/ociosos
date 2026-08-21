@@ -35,12 +35,12 @@ export function threatFor(level: number): ThreatDef {
 
 /** Combined output (Verba/s) the roster needs to neutralize this threat. */
 export function threatThreshold(level: number): Decimal {
-  return new Decimal(260).times(Decimal.pow(2.1, level - 1));
+  return new Decimal(500).times(Decimal.pow(2.1, level - 1));
 }
 
 /** Verba awarded for closing a threat level. */
 export function threatReward(level: number): Decimal {
-  return threatThreshold(level).times(6);
+  return threatThreshold(level).times(3);
 }
 
 /** Every neutralized threat permanently raises the agency's output. */

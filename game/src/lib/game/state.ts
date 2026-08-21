@@ -97,7 +97,11 @@ const AUTOSAVE_MS = 5_000;
  * starts. Deliberately flat and unscaled, so it bootstraps the opening minutes
  * and then fades into irrelevance instead of compounding forever.
  */
-export const BASE_VERBA_PER_SECOND = 3;
+/**
+ * No income before the first enlistment. The free starter hero is what boots
+ * the economy, so the agency produces exactly nothing until the player acts.
+ */
+export const BASE_VERBA_PER_SECOND = 0;
 
 const OFFLINE_RATE = 0.7;
 const BASE_OFFLINE_CAP_H = 12;
