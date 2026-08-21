@@ -34,7 +34,7 @@ export const HEROES: HeroDef[] = [
     costRate: 1.1,
     // Front-loaded on purpose: with no agency income, this hero alone carries
     // the opening minute, so it has to give the player something to spend.
-    baseProduction: 3,
+    baseProduction: 3.0,
   },
   {
     id: "torneco",
@@ -46,7 +46,7 @@ export const HEROES: HeroDef[] = [
     emoji: "🔧",
     recruitCost: 180,
     costRate: 1.11,
-    baseProduction: 9.6,
+    baseProduction: 4.0,
   },
   {
     id: "alho-poro",
@@ -58,7 +58,7 @@ export const HEROES: HeroDef[] = [
     emoji: "🎧",
     recruitCost: 2_400,
     costRate: 1.11,
-    baseProduction: 112,
+    baseProduction: 26.67,
   },
   {
     id: "viuva-cinza",
@@ -70,7 +70,7 @@ export const HEROES: HeroDef[] = [
     emoji: "🕶️",
     recruitCost: 32_000,
     costRate: 1.12,
-    baseProduction: 1360,
+    baseProduction: 213.33,
   },
   {
     id: "capitao-brasil",
@@ -82,7 +82,7 @@ export const HEROES: HeroDef[] = [
     emoji: "🛡️",
     recruitCost: 420_000,
     costRate: 1.12,
-    baseProduction: 16800,
+    baseProduction: 1909,
   },
   {
     id: "ghomme-de-ferro",
@@ -94,7 +94,7 @@ export const HEROES: HeroDef[] = [
     emoji: "🦾",
     recruitCost: 6_000_000,
     costRate: 1.13,
-    baseProduction: 208000,
+    baseProduction: 20000,
   },
   {
     id: "ciumento",
@@ -106,7 +106,7 @@ export const HEROES: HeroDef[] = [
     emoji: "😾",
     recruitCost: 90_000_000,
     costRate: 1.14,
-    baseProduction: 2720000,
+    baseProduction: 225000,
   },
   {
     id: "a-massa",
@@ -118,7 +118,7 @@ export const HEROES: HeroDef[] = [
     emoji: "💪",
     recruitCost: 1_300_000_000,
     costRate: 1.15,
-    baseProduction: 34400000,
+    baseProduction: 2500000,
   },
   {
     id: "ima-neto",
@@ -130,7 +130,7 @@ export const HEROES: HeroDef[] = [
     emoji: "🧲",
     recruitCost: 20_000_000_000,
     costRate: 1.15,
-    baseProduction: 496000000,
+    baseProduction: 30303030,
   },
   {
     id: "doutor-estranhissimo",
@@ -142,7 +142,7 @@ export const HEROES: HeroDef[] = [
     emoji: "🌀",
     recruitCost: 340_000_000_000,
     costRate: 1.16,
-    baseProduction: 7120000000,
+    baseProduction: 414634146,
   },
   {
     id: "pantera-parda",
@@ -154,7 +154,7 @@ export const HEROES: HeroDef[] = [
     emoji: "🐆",
     recruitCost: 6_000_000_000_000,
     costRate: 1.17,
-    baseProduction: 104000000000,
+    baseProduction: 6000000000,
   },
   {
     id: "tio-thanao",
@@ -166,7 +166,7 @@ export const HEROES: HeroDef[] = [
     emoji: "🧤",
     recruitCost: 120_000_000_000_000,
     costRate: 1.18,
-    baseProduction: 1680000000000,
+    baseProduction: 100000000000,
   },
 ];
 

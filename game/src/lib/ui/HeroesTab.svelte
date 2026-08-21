@@ -15,6 +15,7 @@
     departmentSlots,
     heroesInDepartment,
     departmentUnlocked,
+    totalRecruited,
     type BuyAmount,
   } from "../game/state";
   import { activeBuff } from "../game/state";
@@ -71,11 +72,29 @@
     })),
   );
 
+  // One line telling the player what the game wants from them next. Without it
+  // the Intel gate is invisible and the first operation never happens.
+  let hint = $derived.by(() => {
+    const enlisted = totalRecruited($game);
+    if (enlisted === 0) return "Aliste o primeiro herói — o alistamento dele é gratuito.";
+    if (enlisted < 2) return "Aliste um segundo herói para abrir o departamento de Investigação.";
+    const investigating = heroesInDepartment($game, "investigacao").length;
+    if (investigating === 0 && $game.intel < 5)
+      return "Designe alguém para a Investigação: sem Intel, nenhuma operação de campo sai do papel.";
+    if ($game.intel >= 5 && $game.opsCompleted === 0)
+      return "Você já tem Intel suficiente — monte uma equipe na aba Operações.";
+    return null;
+  });
+
   function postFull(deptId: string): boolean {
     const p = posts.find((x) => x.def.id === deptId);
     return !!p && p.used >= p.slots;
   }
 </script>
+
+{#if hint}
+  <p class="hint">{hint}</p>
+{/if}
 
 <div class="posts-bar">
   {#each posts.filter((p) => p.unlocked) as p (p.def.id)}
@@ -296,6 +315,19 @@
     gap: 0.3rem;
     margin-top: 0.15rem;
   }
+  .hint {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    color: var(--sky-blue);
+    background: color-mix(in srgb, var(--sky-blue) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--sky-blue) 40%, transparent);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    margin: 0 0 0.7rem;
+  }
+
   .posts-bar {
     display: flex;
     flex-wrap: wrap;

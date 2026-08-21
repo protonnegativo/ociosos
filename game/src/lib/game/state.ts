@@ -78,6 +78,9 @@ export interface GameState {
   opsCompleted: number;
   runStart: number;
 
+  /** Tabs the player has already opened — drives the "novo" marker. */
+  seenTabs: string[];
+
   // Settings
   autoTrain: boolean;
   /** Fraction of Verba the automation may spend on a single purchase. */
@@ -149,6 +152,7 @@ function freshState(): GameState {
     alertsClaimed: 0,
     opsCompleted: 0,
     runStart: Date.now(),
+    seenTabs: [],
     autoTrain: false,
     autoSpendFraction: 0.5,
     lastTick: Date.now(),
@@ -178,6 +182,7 @@ function serialize(s: GameState): string {
     alertsClaimed: s.alertsClaimed,
     opsCompleted: s.opsCompleted,
     runStart: s.runStart,
+    seenTabs: s.seenTabs,
     autoTrain: s.autoTrain,
     autoSpendFraction: s.autoSpendFraction,
     lastTick: Date.now(),
@@ -248,6 +253,7 @@ function deserialize(raw: string): GameState {
     alertsClaimed: p.alertsClaimed ?? p.manchetesClicked ?? 0,
     opsCompleted: p.opsCompleted ?? 0,
     runStart: p.runStart ?? base.runStart,
+    seenTabs: Array.isArray(p.seenTabs) ? p.seenTabs : [],
     autoTrain: !!p.autoTrain,
     autoSpendFraction: typeof p.autoSpendFraction === "number" ? p.autoSpendFraction : 0.5,
     lastTick: typeof p.lastTick === "number" ? p.lastTick : Date.now(),
@@ -295,7 +301,34 @@ export function heroesInDepartment(s: GameState, deptId: string): string[] {
 }
 
 export function departmentUnlocked(s: GameState, def: DepartmentDef): boolean {
-  return s.maxThreat >= def.minThreat;
+  return s.maxThreat >= def.minThreat && totalRecruited(s) >= def.minHeroes;
+}
+
+/**
+ * Systems arrive one at a time instead of all six tabs greeting a new player.
+ * Each gate is placed just after the thing that makes the tab make sense.
+ */
+export function tabUnlocked(s: GameState, id: string): boolean {
+  switch (id) {
+    case "efetivo":
+      return true;
+    case "operacoes":
+      return s.intel > 0 || s.opsCompleted > 0 || s.activeOps.length > 0;
+    case "melhorias":
+      return s.maxThreat >= 2;
+    case "protocolos":
+      return s.dossies.gt(0) || s.restructurings > 0 || s.totalVerbaThisRun.gte(100_000);
+    case "condecoracoes":
+      return s.achievements.length > 0;
+    case "stats":
+      return s.maxThreat >= 3;
+    default:
+      return true;
+  }
+}
+
+export function markTabSeen(id: string): void {
+  game.update((s) => (s.seenTabs.includes(id) ? s : { ...s, seenTabs: [...s.seenTabs, id] }));
 }
 
 /** Moves a hero to a post, refusing if the department is already full. */

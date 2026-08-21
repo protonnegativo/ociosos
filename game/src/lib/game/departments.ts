@@ -11,6 +11,8 @@ export interface DepartmentDef {
   /** Patrol is where everyone idles, so it never runs out of room. */
   unlimited?: boolean;
   minThreat: number;
+  /** Heroes on the books before this post is even offered. */
+  minHeroes: number;
 }
 
 // Scarcity lives here, not in the hero. Twelve heroes competing for three good
@@ -26,6 +28,7 @@ export const DEPARTMENTS: DepartmentDef[] = [
     baseSlots: 0,
     unlimited: true,
     minThreat: 1,
+    minHeroes: 0,
   },
   {
     id: "investigacao",
@@ -35,6 +38,7 @@ export const DEPARTMENTS: DepartmentDef[] = [
     yields: "intel",
     baseSlots: 2,
     minThreat: 1,
+    minHeroes: 2,
   },
   {
     id: "logistica",
@@ -44,6 +48,7 @@ export const DEPARTMENTS: DepartmentDef[] = [
     yields: "equipamento",
     baseSlots: 1,
     minThreat: 3,
+    minHeroes: 3,
   },
 ];
 

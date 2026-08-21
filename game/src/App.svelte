@@ -14,6 +14,8 @@
     startLoop,
     availableUpgrades,
     canRestructure,
+    tabUnlocked,
+    markTabSeen,
     pendingDossies,
     currentDossieCap,
     dossieProgress,
@@ -88,14 +90,39 @@
     OPERATIONS.filter((o) => opAvailable($game, o) && availableHeroes($game).length >= o.slots).length,
   );
 
-  let tabs = $derived([
-    { id: "efetivo" as const, label: "Efetivo", badge: 0 },
-    { id: "operacoes" as const, label: "Operações", badge: opsReady },
-    { id: "melhorias" as const, label: "Melhorias", badge: upgradeCount },
-    { id: "protocolos" as const, label: "Reestruturar", badge: restructureReady ? 1 : 0 },
-    { id: "condecoracoes" as const, label: "Condecorações", badge: 0 },
-    { id: "stats" as const, label: "Relatório", badge: 0 },
-  ]);
+  const ALL_TABS = [
+    { id: "efetivo" as const, label: "Efetivo" },
+    { id: "operacoes" as const, label: "Operações" },
+    { id: "melhorias" as const, label: "Melhorias" },
+    { id: "protocolos" as const, label: "Reestruturar" },
+    { id: "condecoracoes" as const, label: "Condecorações" },
+    { id: "stats" as const, label: "Relatório" },
+  ];
+
+  const BADGES: Record<string, () => number> = {
+    operacoes: () => opsReady,
+    melhorias: () => upgradeCount,
+    protocolos: () => (restructureReady ? 1 : 0),
+  };
+
+  // Tabs arrive one at a time, each right after the thing that makes it useful.
+  let tabs = $derived(
+    ALL_TABS.filter((t) => tabUnlocked($game, t.id)).map((t) => ({
+      ...t,
+      badge: BADGES[t.id]?.() ?? 0,
+      fresh: !$game.seenTabs.includes(t.id),
+    })),
+  );
+
+  function openTab(id: TabId) {
+    tab = id;
+    markTabSeen(id);
+  }
+
+  // A tab can disappear on restructuring; never leave the player on a dead one.
+  $effect(() => {
+    if (!tabUnlocked($game, tab)) tab = "efetivo";
+  });
 
   // Debug drawer
   let debugOpen = $state(false);
@@ -127,6 +154,7 @@
         </div>
       {/if}
 
+      {#if $game.intel > 0 || $intelFlow > 0 || $game.equipamento > 0 || $equipFlow > 0}
       <div class="support">
         <div class="support-row">
           <span class="support-label">🔍 Intel</span>
@@ -139,6 +167,7 @@
           <span class="support-rate mono">+{$equipFlow.toFixed(2)}/s</span>
         </div>
       </div>
+      {/if}
 
       <div class="boss-panel">
         <div class="boss-head">
@@ -156,6 +185,7 @@
         <div class="boss-current mono">▲ {formatRate($production)} agora</div>
       </div>
 
+      {#if tabUnlocked($game, "protocolos")}
       <div class="frag-block" class:full={atDossieCap($game)}>
         <div class="frag-head">
           <span class="frag-title label">Reestruturação</span>
@@ -172,13 +202,15 @@
           <div class="frag-banked mono">{formatNumber($game.dossies, 0)} arquivados</div>
         {/if}
       </div>
+      {/if}
     </aside>
 
     <main class="main">
       <nav class="tabs">
         {#each tabs as t (t.id)}
-          <button class="tab" class:active={tab === t.id} onclick={() => (tab = t.id)}>
+          <button class="tab" class:active={tab === t.id} onclick={() => openTab(t.id)}>
             {t.label}
+            {#if t.fresh}<span class="tab-new">novo</span>{/if}
             {#if t.badge > 0}<span class="tab-badge">{t.badge}</span>{/if}
           </button>
         {/each}
@@ -567,6 +599,17 @@
     background: var(--panel);
     border-color: var(--rule);
     color: var(--power-gold);
+  }
+  .tab-new {
+    display: inline-block;
+    margin-left: 0.3rem;
+    background: var(--sky-blue);
+    color: #06121f;
+    border-radius: 20px;
+    font-size: 0.58rem;
+    padding: 0.02rem 0.35rem;
+    vertical-align: middle;
+    letter-spacing: 0.06em;
   }
   .tab-badge {
     display: inline-block;
