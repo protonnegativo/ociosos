@@ -12,7 +12,7 @@
     equipPerSecond,
     totalRecruited,
   } from "../game/state";
-  import { DEPARTMENTS, intelRate, equipRate, type DepartmentDef } from "../game/departments";
+  import { DEPARTMENTS, DEFAULT_DEPARTMENT, intelRate, equipRate, type DepartmentDef } from "../game/departments";
   import { HEROES_BY_ID } from "../game/heroes";
   import { formatRate } from "../game/format";
 
@@ -63,6 +63,10 @@
     assignHero(heroId, deptId);
     picking = null;
   }
+
+  function release(heroId: string) {
+    assignHero(heroId, DEFAULT_DEPARTMENT);
+  }
 </script>
 
 <div class="board">
@@ -81,6 +85,9 @@
       {:else}
         <p class="dept-desc">{col.def.desc}</p>
         <div class="dept-total mono">▲ {totalOutput(col.def, col.members)}</div>
+        {#if !col.def.unlimited && col.members.length > 0}
+          <p class="dept-tip">✕ devolve o herói à Patrulha</p>
+        {/if}
 
         <ul class="slots">
           {#each col.members as id (id)}
@@ -88,6 +95,16 @@
               <span class="slot-emoji">{HEROES_BY_ID[id].emoji}</span>
               <span class="slot-name">{HEROES_BY_ID[id].name}</span>
               <span class="slot-rate mono">{output(col.def, id)}</span>
+              {#if !col.def.unlimited}
+                <button
+                  class="slot-release"
+                  title="Devolver {HEROES_BY_ID[id].name} à Patrulha"
+                  aria-label="Devolver {HEROES_BY_ID[id].name} à Patrulha"
+                  onclick={() => release(id)}
+                >
+                  ✕
+                </button>
+              {/if}
             </li>
           {/each}
 
@@ -178,6 +195,12 @@
     color: var(--text-faint);
     margin: 0.2rem 0;
   }
+  .dept-tip {
+    font-size: 0.62rem;
+    font-style: italic;
+    color: var(--text-faint);
+    margin: 0;
+  }
   .dept-total {
     font-size: 0.74rem;
     color: var(--accent);
@@ -227,6 +250,23 @@
   .slot-rate {
     font-size: 0.66rem;
     color: var(--gain-green);
+  }
+  .slot-release {
+    flex-shrink: 0;
+    background: transparent;
+    border: 1px solid var(--rule);
+    color: var(--text-faint);
+    border-radius: 5px;
+    width: 1.3rem;
+    height: 1.3rem;
+    line-height: 1;
+    font-size: 0.7rem;
+    padding: 0;
+  }
+  .slot-release:hover {
+    border-color: var(--hero-red);
+    color: var(--hero-red);
+    background: color-mix(in srgb, var(--hero-red) 15%, transparent);
   }
   .slot-hint {
     font-size: 0.64rem;
