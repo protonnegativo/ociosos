@@ -1,0 +1,136 @@
+:root {
+  --ink: #16142a;
+  --panel: #201d3a;
+  --panel-raised: #2a2650;
+  --rule: #3a3564;
+  --paper: #f1ead4;
+  --text-soft: #b7aede;
+  --text-faint: #857cae;
+  --hero-red: #ff6a52;
+  --hero-red-ink: #c8402f;
+  --power-gold: #f0b94a;
+  --sky-blue: #7fb0e6;
+  --gain-green: #5cf27a;
+  --gain-green-ink: #2e9e4c;
+  --villain-purple: #b06ae8;
+  --fragment-cyan: #63d9d0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at 8px 8px, color-mix(in srgb, var(--paper) 6%, transparent) 1.6px, transparent 1.8px) 0 0/18px 18px,
+    var(--ink);
+  color: var(--paper);
+  font-family: "Source Serif 4", Georgia, serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  min-height: 100vh;
+}
+
+.display {
+  font-family: "Bangers", "Barlow Condensed", sans-serif;
+  letter-spacing: 0.03em;
+}
+
+.label {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.mono {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--sky-blue);
+  outline-offset: 2px;
+}
+
+/* --- Shared building blocks --- */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.68rem;
+  font-weight: 600;
+  border-radius: 20px;
+  padding: 0.12rem 0.55rem;
+}
+.chip-gold {
+  background: color-mix(in srgb, var(--power-gold) 25%, transparent);
+  color: var(--power-gold);
+}
+.chip-green {
+  background: color-mix(in srgb, var(--gain-green) 20%, transparent);
+  color: var(--gain-green);
+}
+.chip-cyan {
+  background: color-mix(in srgb, var(--fragment-cyan) 20%, transparent);
+  color: var(--fragment-cyan);
+}
+.chip-muted {
+  background: color-mix(in srgb, var(--text-faint) 18%, transparent);
+  color: var(--text-faint);
+}
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--rule);
+  color: var(--text-soft);
+  border-radius: 6px;
+  padding: 0.35rem 0.7rem;
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.78rem;
+}
+.btn-ghost:hover {
+  border-color: var(--sky-blue);
+  color: var(--sky-blue);
+}
+
+.empty-note {
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--text-faint);
+  padding: 1.2rem 0;
+  margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}

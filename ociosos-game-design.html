@@ -1,0 +1,814 @@
+<title>Ociosos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Barlow+Condensed:wght@500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Source+Serif+4:ital,wght@1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+  /* ============ TOKENS ============ */
+  :root{
+    --paper: #eee7d3;
+    --paper-raised: #fbf6e8;
+    --ink: #201c2f;
+    --ink-soft: #55507a;
+    --ink-faint: #8b84a8;
+    --rule: #cfc6a3;
+    --hero-red: #b83a2c;
+    --hero-red-ink: #7e2a20;
+    --power-gold: #b8811f;
+    --sky-blue: #2f5e8c;
+    --card-bg: var(--paper-raised);
+    --shadow: 220 20% 10%;
+  }
+
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper: #17152a;
+      --paper-raised: #201e38;
+      --ink: #ece7d8;
+      --ink-soft: #b3ade0;
+      --ink-faint: #837db3;
+      --rule: #3a3660;
+      --hero-red: #e2624c;
+      --hero-red-ink: #f0967f;
+      --power-gold: #e3b558;
+      --sky-blue: #7fb0e6;
+      --card-bg: var(--paper-raised);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper: #17152a;
+    --paper-raised: #201e38;
+    --ink: #ece7d8;
+    --ink-soft: #b3ade0;
+    --ink-faint: #837db3;
+    --rule: #3a3660;
+    --hero-red: #e2624c;
+    --hero-red-ink: #f0967f;
+    --power-gold: #e3b558;
+    --sky-blue: #7fb0e6;
+    --card-bg: var(--paper-raised);
+  }
+
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Source Serif 4", Georgia, "Times New Roman", serif;
+    font-size:17px;
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;}
+  }
+
+  .display{font-family:"Bangers", "Barlow Condensed", sans-serif; letter-spacing:0.03em;}
+  .label{
+    font-family:"Barlow Condensed", sans-serif;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.14em;
+  }
+  code, .mono, .tabular{
+    font-family:"JetBrains Mono", ui-monospace, monospace;
+    font-variant-numeric:tabular-nums;
+  }
+
+  a{color:var(--hero-red-ink); text-decoration-thickness:1.5px; text-underline-offset:2px;}
+
+  /* ============ COVER ============ */
+  .cover{
+    position:relative;
+    background:
+      radial-gradient(circle at 6px 6px, color-mix(in srgb, var(--ink) 10%, transparent) 1.4px, transparent 1.6px) 0 0/16px 16px,
+      linear-gradient(180deg, color-mix(in srgb, var(--hero-red) 14%, var(--paper)) 0%, var(--paper) 78%);
+    padding:3.2rem 1.5rem 2.6rem;
+    border-bottom:3px solid var(--ink);
+  }
+  .cover-inner{max-width:760px; margin:0 auto;}
+  .issue-strip{
+    display:flex; justify-content:space-between; align-items:center;
+    font-family:"Barlow Condensed", sans-serif; font-weight:600;
+    font-size:0.78rem; text-transform:uppercase; letter-spacing:0.12em;
+    color:var(--ink-soft);
+    border:1.5px solid var(--ink); border-radius:3px;
+    padding:0.35rem 0.7rem; margin-bottom:1.6rem;
+    background:color-mix(in srgb, var(--paper-raised) 70%, transparent);
+  }
+  .cover h1{
+    font-size:clamp(3.6rem, 14vw, 6rem);
+    line-height:0.9;
+    margin:0 0 0.15em;
+    color:var(--hero-red-ink);
+    text-shadow: 3px 3px 0 var(--ink);
+    text-wrap:balance;
+  }
+  .cover .subtitle{
+    font-family:"Barlow Condensed", sans-serif;
+    font-weight:700; text-transform:uppercase; letter-spacing:0.06em;
+    font-size:clamp(1.1rem, 3vw, 1.5rem);
+    color:var(--ink); margin:0 0 1rem;
+  }
+  .cover .tagline{
+    font-size:1.15rem; font-style:italic; color:var(--ink-soft);
+    max-width:56ch; margin:0 0 1.4rem;
+  }
+  .meta-row{
+    display:flex; flex-wrap:wrap; gap:0.5rem 1.4rem;
+    font-family:"Barlow Condensed", sans-serif; font-weight:600;
+    font-size:0.85rem; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.04em;
+  }
+  .meta-row b{color:var(--ink); font-weight:700;}
+
+  /* ============ NAV ============ */
+  nav.toc{
+    max-width:760px; margin:1.8rem auto 0; padding:0 1.5rem;
+  }
+  nav.toc .toc-box{
+    border:1.5px solid var(--rule); border-radius:6px;
+    padding:0.9rem 1.1rem;
+    background:var(--paper-raised);
+  }
+  nav.toc .toc-title{
+    font-family:"Barlow Condensed",sans-serif; font-weight:700; text-transform:uppercase;
+    letter-spacing:0.12em; font-size:0.75rem; color:var(--ink-faint); margin-bottom:0.6rem;
+  }
+  nav.toc ol{
+    columns:2; column-gap:1.6rem; margin:0; padding:0; list-style:none; counter-reset:toc;
+  }
+  nav.toc li{
+    counter-increment:toc; break-inside:avoid; margin-bottom:0.35rem;
+    font-family:"Barlow Condensed", sans-serif; font-size:0.95rem;
+  }
+  nav.toc li a{
+    color:var(--ink); text-decoration:none; font-weight:600;
+  }
+  nav.toc li a::before{
+    content:counter(toc) ". "; color:var(--hero-red-ink); font-weight:700;
+  }
+  nav.toc li a:hover{color:var(--hero-red-ink);}
+
+  /* ============ MAIN ============ */
+  main{max-width:760px; margin:0 auto; padding:0 1.5rem 4rem;}
+  .wide{max-width:960px;}
+
+  section{padding-top:3.2rem; scroll-margin-top:1rem;}
+  section + section{border-top:1px solid var(--rule);}
+
+  .eyebrow{
+    font-family:"Barlow Condensed", sans-serif; font-weight:700;
+    text-transform:uppercase; letter-spacing:0.16em; font-size:0.78rem;
+    color:var(--hero-red-ink); margin:0 0 0.4rem;
+  }
+  h2{
+    font-family:"Barlow Condensed", sans-serif; font-weight:700;
+    text-transform:uppercase; letter-spacing:0.01em;
+    font-size:clamp(1.7rem, 4.5vw, 2.2rem);
+    margin:0 0 1rem; color:var(--ink); text-wrap:balance;
+  }
+  h3{
+    font-family:"Barlow Condensed", sans-serif; font-weight:700;
+    text-transform:uppercase; letter-spacing:0.03em;
+    font-size:1.25rem; margin:2rem 0 0.7rem; color:var(--ink);
+  }
+  h3 .num{color:var(--hero-red-ink); margin-right:0.4rem;}
+
+  p{margin:0 0 1rem; max-width:66ch;}
+  ul, ol{margin:0 0 1.1rem; padding-left:1.3rem;}
+  li{margin-bottom:0.4rem; max-width:64ch;}
+  strong{color:var(--ink); font-weight:700;}
+
+  .lede{font-size:1.2rem; color:var(--ink-soft); max-width:62ch;}
+
+  /* pillars */
+  .pillars{
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(210px,1fr));
+    gap:1rem; margin:1.6rem 0;
+  }
+  .pillar{
+    border:1.5px solid var(--ink); border-radius:6px; padding:1rem 1.1rem;
+    background:var(--card-bg);
+    box-shadow: 3px 3px 0 color-mix(in srgb, var(--ink) 70%, transparent);
+  }
+  .pillar .pnum{
+    font-family:"Bangers"; font-size:1.7rem; color:var(--hero-red-ink); line-height:1;
+  }
+  .pillar h4{
+    font-family:"Barlow Condensed",sans-serif; text-transform:uppercase; font-weight:700;
+    font-size:1.02rem; margin:0.3rem 0 0.3rem; letter-spacing:0.02em;
+  }
+  .pillar p{font-size:0.92rem; margin:0; color:var(--ink-soft);}
+
+  /* callout */
+  .callout{
+    border-left:4px solid var(--power-gold);
+    background:color-mix(in srgb, var(--power-gold) 10%, var(--paper-raised));
+    border-radius:0 6px 6px 0;
+    padding:0.9rem 1.1rem; margin:1.3rem 0;
+  }
+  .callout .label{color:var(--power-gold); font-size:0.72rem; display:block; margin-bottom:0.35rem;}
+  .callout p{margin:0; font-size:0.95rem; max-width:none;}
+
+  .callout.legal{border-left-color:var(--sky-blue); background:color-mix(in srgb, var(--sky-blue) 10%, var(--paper-raised));}
+  .callout.legal .label{color:var(--sky-blue);}
+
+  /* tables */
+  .tbl-wrap{overflow-x:auto; margin:1.2rem 0 1.6rem; border:1.5px solid var(--rule); border-radius:6px;}
+  table{border-collapse:collapse; width:100%; min-width:520px; font-size:0.92rem;}
+  thead th{
+    font-family:"Barlow Condensed",sans-serif; text-transform:uppercase; letter-spacing:0.06em;
+    font-weight:700; font-size:0.76rem; text-align:left; color:var(--paper);
+    background:var(--ink); padding:0.55rem 0.8rem;
+  }
+  tbody td{padding:0.55rem 0.8rem; border-bottom:1px solid var(--rule); vertical-align:top;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:nth-child(even){background:color-mix(in srgb, var(--rule) 22%, transparent);}
+  td.num, th.num{font-family:"JetBrains Mono",monospace; font-variant-numeric:tabular-nums;}
+
+  /* formula block */
+  .formula{
+    font-family:"JetBrains Mono", monospace; font-size:0.95rem;
+    background:var(--ink); color:var(--power-gold);
+    border-radius:6px; padding:0.9rem 1.1rem; margin:1rem 0;
+    overflow-x:auto; white-space:pre;
+  }
+  .formula .v{color:var(--paper);}
+
+  /* hero roster grid */
+  .roster{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(230px,1fr));
+    gap:1.1rem; margin:1.6rem 0 2rem;
+  }
+  .hcard{
+    background:var(--card-bg); border:1.5px solid var(--ink);
+    border-radius:8px; overflow:hidden;
+    box-shadow:3px 3px 0 color-mix(in srgb, var(--ink) 65%, transparent);
+    transition:transform 0.15s ease;
+  }
+  .hcard:hover{transform:translateY(-3px);}
+  .hcard .band{height:7px;}
+  .hcard .body{padding:0.9rem 1rem 1.1rem;}
+  .hcard .faction{
+    font-family:"Barlow Condensed",sans-serif; font-weight:700; text-transform:uppercase;
+    font-size:0.68rem; letter-spacing:0.1em; color:var(--ink-faint); margin-bottom:0.25rem;
+  }
+  .hcard h4{
+    font-family:"Bangers"; font-size:1.55rem; letter-spacing:0.02em;
+    margin:0 0 0.15rem; color:var(--ink); line-height:1.05;
+  }
+  .hcard .rarity{font-size:0.78rem; margin-bottom:0.5rem; color:var(--power-gold); font-weight:600;}
+  .hcard p{font-size:0.88rem; margin:0; color:var(--ink-soft); max-width:none;}
+  .hcard .role{
+    display:inline-block; margin-top:0.55rem;
+    font-family:"Barlow Condensed",sans-serif; font-weight:700; text-transform:uppercase;
+    font-size:0.68rem; letter-spacing:0.06em; color:var(--sky-blue);
+    border:1px solid var(--sky-blue); border-radius:20px; padding:0.15rem 0.55rem;
+  }
+
+  .band-avengers{background:var(--hero-red);}
+  .band-mutants{background:var(--sky-blue);}
+  .band-guard{background:var(--power-gold);}
+  .band-villain{background:var(--ink-soft);}
+
+  /* timeline */
+  .timeline{border-left:3px solid var(--ink); margin:1.5rem 0 1.5rem 0.4rem; padding-left:1.3rem;}
+  .tstep{position:relative; margin-bottom:1.3rem;}
+  .tstep::before{
+    content:""; position:absolute; left:-1.75rem; top:0.25rem;
+    width:11px; height:11px; border-radius:50%;
+    background:var(--hero-red-ink); border:2px solid var(--paper);
+    box-shadow:0 0 0 1.5px var(--ink);
+  }
+  .tstep .tt{font-family:"JetBrains Mono",monospace; font-size:0.82rem; color:var(--hero-red-ink); font-weight:600;}
+  .tstep p{margin:0.15rem 0 0;}
+
+  /* footer */
+  footer{
+    max-width:760px; margin:0 auto; padding:2.5rem 1.5rem 3.5rem;
+    border-top:3px solid var(--ink);
+  }
+  footer .colophon{
+    font-family:"Barlow Condensed",sans-serif; font-size:0.85rem; color:var(--ink-faint);
+    text-align:center; text-transform:uppercase; letter-spacing:0.08em;
+  }
+
+  ::selection{background:var(--hero-red); color:var(--paper);}
+</style>
+
+<div class="cover">
+  <div class="cover-inner">
+    <div class="issue-strip">
+      <span>Documento de Design · Edição Nº 1</span>
+      <span>Universo 7½</span>
+    </div>
+    <h1 class="display">OCIOSOS</h1>
+    <p class="subtitle">a liga dos quase-heróis</p>
+    <p class="tagline">Um idle game cômico, paródia de universo de super-heróis, em que o superpoder de verdade é não fazer nada — e o jogo inteiro é sobre transformar isso em progressão viciante.</p>
+    <div class="meta-row">
+      <span><b>Gênero:</b> Idle / incremental de heróis colecionáveis</span>
+      <span><b>Plataforma:</b> Mobile + Web, portrait-first</span>
+      <span><b>Tom:</b> Comédia pastelão de HQ</span>
+    </div>
+  </div>
+</div>
+
+<nav class="toc">
+  <div class="toc-box">
+    <div class="toc-title">Nesta edição</div>
+    <ol>
+      <li><a href="#pitch">O Pitch e os Pilares</a></li>
+      <li><a href="#fantasia">A Fantasia Central</a></li>
+      <li><a href="#loop">O Loop: do Clique ao Automático</a></li>
+      <li><a href="#economia">Moedas e Economia</a></li>
+      <li><a href="#matematica">A Matemática da Progressão</a></li>
+      <li><a href="#herois">Sistema de Heróis</a></li>
+      <li><a href="#roster">Elenco de Exemplo</a></li>
+      <li><a href="#conteudo">Estágios, Combate e Chefes</a></li>
+      <li><a href="#retencao">O Loop de Retenção</a></li>
+      <li><a href="#social">Redações e Vida Social</a></li>
+      <li><a href="#monetizacao">Monetização sem Vilania</a></li>
+      <li><a href="#onboarding">Os Primeiros 30 Minutos</a></li>
+      <li><a href="#roadmap">Roadmap de Conteúdo</a></li>
+      <li><a href="#armadilhas">Armadilhas a Evitar</a></li>
+      <li><a href="#producao">Plano de Produção</a></li>
+      <li><a href="#stack">Pilha Técnica</a></li>
+      <li><a href="#construido">O Que Já Está Construído</a></li>
+    </ol>
+  </div>
+</nav>
+
+<main>
+
+<section id="pitch">
+  <p class="eyebrow">01 — O Conceito</p>
+  <h2>O pitch e os pilares</h2>
+  <p class="lede">Ociosos é um idle game onde o jogador comanda uma liga de super-heróis paródia que descobriram algo perigoso: dá muito mais lucro ser famoso do que ser útil. O jogador toca a tela para os heróis agirem, mas em minutos contrata estagiários e empresários que assumem o trabalho — sobrando tempo para evoluir o time, montar sinergias entre facções e, quando tudo travar, <em>rebootar</em> o universo pra recomeçar mais forte, como uma nova edição de revista.</p>
+
+  <div class="pillars">
+    <div class="pillar">
+      <div class="pnum display">1</div>
+      <h4>Preguiça é o herói</h4>
+      <p>Todo mecanismo de automação é abraçado pela narrativa — os heróis literalmente contratam gente pra não trabalhar. Idle não é desculpa técnica, é a piada central.</p>
+    </div>
+    <div class="pillar">
+      <div class="pnum display">2</div>
+      <h4>Piada visível, número honesto</h4>
+      <p>O humor nunca esconde a economia real. O jogador sempre sabe o que um upgrade faz, mesmo que o nome dele seja ridículo.</p>
+    </div>
+    <div class="pillar">
+      <div class="pnum display">3</div>
+      <h4>Cada reset é uma HQ nova</h4>
+      <p>Prestígio é reboot narrativo com ganho matemático real — nunca grind vazio repetindo a mesma história.</p>
+    </div>
+    <div class="pillar">
+      <div class="pnum display">4</div>
+      <h4>Grátis até o fim, mais rápido se pagar</h4>
+      <p>Todo conteúdo é alcançável sem gastar dinheiro. Compras aceleram ou enfeitam — nunca destravam poder exclusivo.</p>
+    </div>
+  </div>
+
+  <div class="callout legal">
+    <span class="label">Nota de produção</span>
+    <p>É paródia, não referência disfarçada: nomes, uniformes e logos precisam ser criações próprias e visualmente distintos dos originais (cores, silhuetas, tipografia). A paródia protege a piada, não a cópia — vale revisão jurídica antes do lançamento, sobretudo em nomes muito próximos de marcas reais.</p>
+  </div>
+</section>
+
+<section id="fantasia">
+  <p class="eyebrow">02 — O Mundo</p>
+  <h2>A fantasia central</h2>
+  <p>O jogo se passa no <strong>Universo 7½</strong> — numerado assim porque nem os próprios heróis tiveram disposição de arredondar. É uma versão do multiverso de super-heróis clássico onde todo mundo ganhou poderes incríveis nos anos 60, 70 e 80 e, décadas depois, está mais interessado em patrocínio, aposentadoria e grupo de WhatsApp da associação de heróis do que em salvar o mundo ativamente.</p>
+  <p>O jogador entra como o novo <strong>editor-chefe</strong> da revista/liga — não um herói, mas quem organiza a bagunça: recruta, escala, motiva (ou suborna) o elenco pra continuar detendo o crime, mesmo que a contragosto. Essa moldura justifica perfeitamente a fantasia idle: o jogador não controla o combate em si, controla a operação por trás dele — exatamente como o gênero pede.</p>
+  <p>Tom de humor: sátira seca, entregue com cara séria. Os heróis são profissionais desgastados, não palhaços; as piadas nascem do reconhecimento — contratos, crossovers forçados, reboots editoriais, reuniões — e nunca de trocadilho ou pastelão. Nada de humor agressivo ou paródia pessoal de figuras reais.</p>
+</section>
+
+<section id="loop">
+  <p class="eyebrow">03 — O Núcleo do Jogo</p>
+  <h2>O loop: do clique ao automático</h2>
+  <p>Esse é o loop mais importante do jogo — praticamente tudo mais existe para alimentá-lo. A transição de clique manual para automação precisa ser <strong>sentida em minutos</strong>, não em horas, e o clique nunca deve desaparecer: ele vira bônus opcional para quem quer interagir.</p>
+
+  <div class="timeline">
+    <div class="tstep">
+      <div class="tt">00:00 – 00:02:00</div>
+      <p><strong>Bater ponto no crime.</strong> O jogador toca a tela e o herói ativo soca um vilão de rua. Cada toque rende <span class="mono">1 Fama</span>. Feedback imediato: número flutuante, tela treme de leve, som seco de impacto.</p>
+    </div>
+    <div class="tstep">
+      <div class="tt">00:02:00 – 00:05:00</div>
+      <p><strong>Primeiro Estagiário.</strong> Com ~15 Fama o jogador contrata o primeiro estagiário, que repete a ação sozinho a 0,1 Fama/s. É caro pro que rende, de propósito: o objetivo é o jogador <em>sentir</em> a virada de manual para automático, não que ela já seja ótima.</p>
+    </div>
+    <div class="tstep">
+      <div class="tt">00:05:00 – 00:30:00</div>
+      <p><strong>Escala de estagiários e departamentos.</strong> O jogador compra mais estagiários e desbloqueia o segundo herói (segundo "departamento" de geração). O clique manual já rende menos que 5% da produção total — vira relevante só em <em>Manchetes Quentes</em>, eventos aleatórios que multiplicam o valor de cada toque por 60 segundos.</p>
+    </div>
+    <div class="tstep">
+      <div class="tt">a partir de 30–60 min</div>
+      <p><strong>Empresários.</strong> Cada gerador ganha um "Empresário" comprável — um automatizador que reinveste sozinho nesse gerador específico, liberando o jogador para não precisar nem comprar upgrades manualmente. Esse é o ponto em que o jogo se torna verdadeiramente idle: pode ficar minimizado que a economia segue rodando.</p>
+    </div>
+  </div>
+
+  <p>Esse ritmo segue o padrão consolidado do gênero: hook imediato nos primeiros minutos, automação sentida cedo, e o clique manual rebaixado a bônus — nunca removido, porque tocar a tela continua sendo satisfatório mesmo quando irrelevante numericamente.</p>
+</section>
+
+<section id="economia">
+  <p class="eyebrow">04 — A Economia</p>
+  <h2>Moedas e economia</h2>
+  <p>Três moedas, cada uma com um papel específico e nenhuma delas universal — a complexidade é introduzida aos poucos, uma moeda nova só aparece quando a anterior já foi dominada.</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr><th>Moeda</th><th>Papel</th><th>Como se ganha</th><th>Pra que serve</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Fama</strong><br><span class="mono" style="font-size:0.78rem;color:var(--ink-faint)">soft, infinita</span></td>
+          <td>Moeda do dia a dia</td>
+          <td>Cliques, estagiários, missões</td>
+          <td>Contratar/upar heróis, comprar estagiários e empresários</td>
+        </tr>
+        <tr>
+          <td><strong>Fragmentos de Reboot</strong><br><span class="mono" style="font-size:0.78rem;color:var(--ink-faint)">prestígio</span></td>
+          <td>Motor de longo prazo</td>
+          <td>Ao "rebootar" o universo (prestígio)</td>
+          <td>Retcons — multiplicadores permanentes que sobrevivem ao reset</td>
+        </tr>
+        <tr>
+          <td><strong>Selos Raros</strong><br><span class="mono" style="font-size:0.78rem;color:var(--ink-faint)">premium, escassa</span></td>
+          <td>Aceleração e vaidade</td>
+          <td>Conquistas, eventos, compra opcional</td>
+          <td>Edições variante (skins), refresh de energia, cosméticos de time</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Além dessas três, cada herói tem um recurso próprio de ascensão — <strong>Recortes de Revista</strong> daquele personagem, ganhos ao puxar duplicatas dele em recrutamentos. Recortes fundem-se em evoluções de raridade, garantindo que duplicata nunca seja lixo de inventário.</p>
+
+  <div class="callout">
+    <span class="label">Por que não uma quarta moeda</span>
+    <p>Cada camada nova de economia é cara cognitivamente. Três moedas centrais + recurso de ascensão por herói já cobre curto prazo (Fama), longuíssimo prazo (Fragmentos) e vaidade/aceleração (Selos) sem exigir malabarismo mental do jogador.</p>
+  </div>
+</section>
+
+<section id="matematica">
+  <p class="eyebrow">05 — Sob o Capô</p>
+  <h2>A matemática da progressão</h2>
+
+  <h3><span class="num">5.1</span>Custo de estagiários e empresários</h3>
+  <p>Custo cresce exponencial, produção cresce linear — essa assimetria é o motor de todo o gênero: garante que qualquer gerador eventualmente "esfria" e empurra o jogador para o próximo tier ou para o reboot.</p>
+  <div class="formula">custo(n) = custo_base <span class="v">×</span> taxa^n
+produção_total = produção_base <span class="v">×</span> quantidade <span class="v">×</span> multiplicadores</div>
+  <p>Taxas recomendadas: <span class="mono">1.07–1.12</span> para os primeiros geradores (compráveis em massa, crescimento suave); até <span class="mono">1.3–1.6</span> para geradores de tier alto e upgrades raros (poucos por run, cada compra importa).</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr><th>Tier</th><th>Gerador</th><th class="num">Custo base</th><th class="num">Taxa</th><th class="num">Produção base</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td>Estagiário</td><td class="num">15 Fama</td><td class="num">1.08</td><td class="num">0.1/s</td></tr>
+        <tr><td>2</td><td>Repórter freelancer</td><td class="num">180 Fama</td><td class="num">1.09</td><td class="num">1.2/s</td></tr>
+        <tr><td>3</td><td>Assistente social (mídia)</td><td class="num">2,4 mil</td><td class="num">1.10</td><td class="num">14/s</td></tr>
+        <tr><td>4</td><td>Empresário júnior</td><td class="num">32 mil</td><td class="num">1.11</td><td class="num">170/s</td></tr>
+        <tr><td>5</td><td>Chefe de gabinete</td><td class="num">420 mil</td><td class="num">1.12</td><td class="num">2,1 mil/s</td></tr>
+        <tr><td>6</td><td>Diretoria da liga</td><td class="num">6 milhões</td><td class="num">1.14</td><td class="num">26 mil/s</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="font-size:0.88rem;color:var(--ink-faint)">Cada tier ~10–13× mais caro e mais produtivo que o anterior — o padrão de "5 a 8 tiers por era" que dá sensação constante de escala sem precisar de mais de uma dúzia de sistemas simultâneos.</p>
+
+  <h3><span class="num">5.2</span>Reboot (prestígio)</h3>
+  <p>Ao rebootar, o jogador zera Fama e geradores em troca de Fragmentos de Reboot, calculados a partir do total de Fama já gerado na run. O expoente da fórmula define o ritmo: quanto menor, mais espaçados e mais "importantes" ficam os reboots.</p>
+  <div class="formula">fragmentos_ganhos = (fama_total_da_run <span class="v">/</span> K) ^ 0.6</div>
+  <p>Expoente <span class="mono">0.6</span> fica no meio do território validado pelo gênero (0.5 a 0.8): resetar cedo demais rende quase nada, mas o jogador não precisa esperar dias para o próximo reboot valer a pena. <strong>Primeiro reboot deve estar acessível entre 20 e 60 minutos de jogo ativo</strong>, para ensinar o sistema logo. Reboots seguintes se alongam naturalmente porque a run seguinte já começa mais forte, exigindo mais Fama total pra render o mesmo ganho proporcional.</p>
+
+  <h3><span class="num">5.3</span>Progresso offline</h3>
+  <div class="formula">ganho_offline = produção_por_segundo <span class="v">×</span> tempo_offline <span class="v">×</span> 0.7 <span class="v">(cap 12h, 20h com upgrade)</span></div>
+  <p>70% da taxa online, capado em 12 horas por padrão (upgradável até 20h via Retcon de prestígio ou 24h com Selos Raros). O teto é proposital: gera "sensação de oportunidade perdida" que traz o jogador de volta, em vez de recompensa infinita que mata a urgência do check-in diário.</p>
+
+  <h3><span class="num">5.4</span>Notação de números grandes</h3>
+  <p>Acima de trilhão o jogo usa as abreviações de escala curta que o público de idle já lê fluentemente — legibilidade vence tematização aqui, e cada troca de sufixo funciona como marco visual de progresso:</p>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Faixa</th><th>Sufixo</th><th>Nome</th></tr></thead>
+      <tbody>
+        <tr><td class="num">10³ – 10¹¹</td><td class="num">K, M, B</td><td>Mil, Milhão, Bilhão</td></tr>
+        <tr><td class="num">10¹² – 10¹⁴</td><td class="num">T</td><td>Trilhão</td></tr>
+        <tr><td class="num">10¹⁵ – 10¹⁷</td><td class="num">Qa</td><td>Quadrilhão</td></tr>
+        <tr><td class="num">10¹⁸ – 10²⁰</td><td class="num">Qi</td><td>Quintilhão</td></tr>
+        <tr><td class="num">10²¹ – 10²⁶</td><td class="num">Sx · Sp</td><td>Sextilhão, Septilhão</td></tr>
+        <tr><td class="num">10²⁷ – 10³²</td><td class="num">Oc · No</td><td>Octilhão, Nonilhão</td></tr>
+        <tr><td class="num">10³³ – 10³⁵</td><td class="num">Dc</td><td>Decilhão</td></tr>
+        <tr><td class="num">10³⁶ +</td><td class="num">e36…</td><td>Notação científica</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="herois">
+  <p class="eyebrow">06 — O Elenco</p>
+  <h2>Sistema de heróis</h2>
+
+  <h3><span class="num">6.1</span>Raridades</h3>
+  <p>Cinco degraus, nomeados como se fossem categorias editoriais de uma revista — reforça o tema em vez de usar "comum/raro/épico" genérico:</p>
+  <ul>
+    <li><strong>Herói de Bairro</strong> — comum, recrutamento básico</li>
+    <li><strong>Coadjuvante</strong> — incomum</li>
+    <li><strong>Herói de Capa</strong> — raro, estampa a capa da edição</li>
+    <li><strong>Ícone</strong> — épico</li>
+    <li><strong>Cânone</strong> — lendário, o topo — "virou cânone do universo"</li>
+  </ul>
+
+  <h3><span class="num">6.2</span>Duplicatas viram evolução</h3>
+  <p>Puxar um herói repetido nunca é desperdício: vira <strong>Recortes de Revista</strong> daquele personagem, usados para "virar a página" — subir de raridade. Isso segue o padrão consolidado (Idle Heroes, AFK Arena) que evita inventário-lixo e transforma sorte ruim em progresso garantido.</p>
+
+  <h3><span class="num">6.3</span>Sinergias de facção</h3>
+  <p>Heróis pertencem a facções paródia (equivalentes a times clássicos de HQ). Montar 2+ heróis da mesma facção na escalação dá bônus de crítico, resistência ou geração de Fama — o jogador pensa em composição de time, não em micro de combate individual.</p>
+
+  <h3><span class="num">6.4</span>Formação</h3>
+  <p>Escalação em duas linhas: <strong>Capa</strong> (frontline — tanques, absorvem dano) e <strong>Bastidores</strong> (backline — dano e suporte). Simples o bastante pra decidir em segundos, profundo o bastante pra render discussão de comunidade sobre a "escalação ideal".</p>
+</section>
+
+<section id="roster" class="wide">
+  <p class="eyebrow">07 — Amostra</p>
+  <h2>Elenco de exemplo</h2>
+  <p>Uma amostra inicial de dez heróis (de um elenco planejado bem maior) para demonstrar como raridade, facção e piada de paródia se cruzam. Nomes e poderes são intencionalmente tortos em relação às inspirações — ponto de partida para a arte final definir silhuetas e paleta próprias.</p>
+
+  <div class="roster">
+    <div class="hcard">
+      <div class="band band-avengers"></div>
+      <div class="body">
+        <div class="faction">Ociosos · linha de frente</div>
+        <h4 class="display">Ghomme de Ferro</h4>
+        <div class="rarity">★★★★ Ícone</div>
+        <p>Banca a liga inteira e não deixa ninguém esquecer. A armadura é impecável; o humor, não.</p>
+        <span class="role">Dano / Capa</span>
+      </div>
+    </div>
+    <div class="hcard">
+      <div class="band band-avengers"></div>
+      <div class="body">
+        <div class="faction">Ociosos · linha de frente</div>
+        <h4 class="display">Capitão Brasil</h4>
+        <div class="rarity">★★★ Herói de Capa</div>
+        <p>Voltou do gelo com os valores intactos e as referências de 1943. Ninguém teve coragem de atualizá-lo.</p>
+        <span class="role">Tanque / Capa</span>
+      </div>
+    </div>
+    <div class="hcard">
+      <div class="band band-avengers"></div>
+      <div class="body">
+        <div class="faction">Ociosos · linha de frente</div>
+        <h4 class="display">A Massa</h4>
+        <div class="rarity">★★★★★ Cânone</div>
+        <p>Passou por seis terapeutas. O sexto recomendou que ele parasse de trabalhar. Voltou no dia seguinte.</p>
+        <span class="role">Tanque / Capa</span>
+      </div>
+    </div>
+    <div class="hcard">
+      <div class="band band-avengers"></div>
+      <div class="body">
+        <div class="faction">Ociosos · bastidores</div>
+        <h4 class="display">Viúva Cinza</h4>
+        <div class="rarity">★★★ Herói de Capa</div>
+        <p>Trocou espionagem por recursos humanos. Mantém os dois currículos atualizados.</p>
+        <span class="role">Suporte / Bastidores</span>
+      </div>
+    </div>
+    <div class="hcard">
+      <div class="band band-avengers"></div>
+      <div class="body">
+        <div class="faction">Ociosos · bastidores</div>
+        <h4 class="display">Torneco</h4>
+        <div class="rarity">★★ Coadjuvante</div>
+        <p>Herdou o martelo, o trono e a dívida. Só o último ainda funciona.</p>
+        <span class="role">Dano / Bastidores</span>
+      </div>
+    </div>
+    <div class="hcard">
+      <div class="band band-avengers"></div>
+      <div class="body">
+        <div class="faction">Ociosos · bastidores</div>
+        <h4 class="display">Rapaz-Barata</h4>
+        <div class="rarity">★ Herói de Bairro</div>
+        <p>Sobreviveu a dois cancelamentos, um reboot e uma explosão nuclear. Segue sem contrato fixo.</p>
+        <span class="role">Utilidade / Bastidores</span>
+      </div>
+    </div>
+    <div class="hcard">
+      <div class="band band-mutants"></div>
+      <div class="body">
+        <div class="faction">Mutantes Anônimos</div>
+        <h4 class="display">Ciumento</h4>
+        <div class="rarity">★★★★ Ícone</div>
+        <p>Cura qualquer ferimento em segundos. Guarda rancor por décadas.</p>
+        <span class="role">Dano / Capa</span>
+      </div>
+    </div>
+    <div class="hcard">
+      <div class="band band-mutants"></div>
+      <div class="body">
+        <div class="faction">Mutantes Anônimos</div>
+        <h4 class="display">Ímã-Neto</h4>
+        <div class="rarity">★★★ Herói de Capa</div>
+        <p>Foi vilão, virou herói, virou vilão, voltou. O jurídico desistiu de acompanhar.</p>
+        <span class="role">Controle / Bastidores</span>
+      </div>
+    </div>
+    <div class="hcard">
+      <div class="band band-guard"></div>
+      <div class="body">
+        <div class="faction">Guarda-Costas da Galáxia</div>
+        <h4 class="display">Capitão Alho-Poró</h4>
+        <div class="rarity">★★ Coadjuvante</div>
+        <p>Cresceu no espaço ouvindo a mesma fita. Chama isso de curadoria; a tripulação discorda.</p>
+        <span class="role">Dano / Capa</span>
+      </div>
+    </div>
+    <div class="hcard">
+      <div class="band band-villain"></div>
+      <div class="body">
+        <div class="faction">C.H.A.T.O. · vilão</div>
+        <h4 class="display">Tio Thanão</h4>
+        <div class="rarity">★★★★★ Cânone</div>
+        <p>Queria cortar metade do universo por eficiência. Aceitou um cargo de consultor e faz basicamente o mesmo.</p>
+        <span class="role">Chefe de Edição</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="conteudo">
+  <p class="eyebrow">08 — A Campanha</p>
+  <h2>Estágios, combate e chefes</h2>
+
+  <h3><span class="num">8.1</span>Estrutura em edições</h3>
+  <p>A campanha principal é dividida em <strong>Edições</strong> (o equivalente a "estágios"), agrupadas em <strong>Arcos</strong> de ~50 edições cada, encerrados por um <strong>Vilão da Capa</strong> — um chefe temático que exige poder de time real (DPS check), não sorte. Os vilões não são criminosos de rua: são a máquina que controla os heróis — auditoria, jurídico, algoritmo, acionista, conselho de reestruturação — jogados a sério, com ameaça real. Esse padrão de "parede → grind → avanço" dá metas visíveis de curto prazo dentro de uma progressão de longuíssimo prazo, evitando tanto tédio (progressão contínua sem marcos) quanto frustração (paredes sem propósito claro).</p>
+
+  <h3><span class="num">8.2</span>Combate automático</h3>
+  <p>Combate é 100% observável, nunca exige input constante: o time pré-configurado luta sozinho contra a próxima edição. O jogador tem um botão de <strong>Bordão</strong> — a frase de efeito de um herói, usável a cada poucos segundos, que causa dano bônus para quem gosta de interagir ativamente, mas nunca é obrigatório para progredir.</p>
+
+  <h3><span class="num">8.3</span>Quando o jogador trava</h3>
+  <p>Ao travar num Vilão da Capa, o objetivo fica óbvio: voltar a edições anteriores pra farmar Fama e Recortes, subir de nível o time, talvez rebootar. O "pra quê estou grindando" precisa estar sempre visível na tela — nunca farm sem propósito declarado.</p>
+</section>
+
+<section id="retencao">
+  <p class="eyebrow">09 — O Dia a Dia</p>
+  <h2>O loop de retenção</h2>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Sistema</th><th>Frequência</th><th>O que faz</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Cheque do Estúdio</strong></td><td>Diário</td><td>Recompensa de login com trilha crescente ao longo do mês</td></tr>
+        <tr><td><strong>Pautas do Dia</strong></td><td>Diária/semanal</td><td>Missões curtas com metas claras (derrote X vilões, gaste Y Fama)</td></tr>
+        <tr><td><strong>Crossover Especial</strong></td><td>Rotativo (7–10 dias)</td><td>Evento temático com moeda própria e loja limitada</td></tr>
+        <tr><td><strong>Troféus de Fã</strong></td><td>Permanente</td><td>Conquistas de longo prazo que recompensam marcos históricos</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>O teto de progresso offline (seção 5.3) é o principal motor de retorno de curto prazo: o jogador sente que "perde" ganho se não checar o jogo, sem que isso vire ansiedade — é só uma janela de 12–20h, não uma penalidade por ausência.</p>
+</section>
+
+<section id="social">
+  <p class="eyebrow">10 — Multiplayer Assíncrono</p>
+  <h2>Redações e vida social</h2>
+  <p>Elementos sociais funcionam melhor em idle games quando <strong>não exigem presença simultânea</strong>. Duas peças cobrem isso:</p>
+  <ul>
+    <li><strong>Redação (guilda):</strong> grupos de até 30 jogadores enfrentam um <strong>Vilão de Capa Especial</strong> cooperativo — dano compartilhado, cada membro contribui quando loga, sem exigir sincronização de horário.</li>
+    <li><strong>Batalha de Vendas (PvP assíncrono):</strong> o jogador ataca a "réplica" da escalação de outro jogador, nunca a pessoa em tempo real — ranking de "revista mais vendida da semana" com recompensas por faixa.</li>
+  </ul>
+</section>
+
+<section id="monetizacao">
+  <p class="eyebrow">11 — Negócio</p>
+  <h2>Monetização sem vilania</h2>
+  <p>Gacha e passe de assinatura (battle pass) dominam o mercado de idle games com heróis, mas a linha entre ético e predatório é bem documentada pela própria comunidade do gênero — particularmente hostil a bloqueios duros de conteúdo.</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Vende-se</th><th>Nunca se vende</th></tr></thead>
+      <tbody>
+        <tr><td>Edições Variante — skins cosméticas de heróis</td><td>Heróis exclusivos inalcançáveis de graça</td></tr>
+        <tr><td>Café Expresso — refresh de energia/timers</td><td>Poder que o grind não consiga igualar, ainda que mais devagar</td></tr>
+        <tr><td>Assinatura da Revista — passe com trilha grátis + paga, ambas com recompensas reais</td><td>Odds de recrutamento escondidas</td></tr>
+        <tr><td>Selos Raros avulsos, sempre opcionais</td><td>Anúncios forçados sem recompensa em troca</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Regra de ouro: qualquer herói ou upgrade deve ser alcançável só com grind — mais devagar, nunca impossível. Isso é o que separa "acelerador" de "bloqueador", a distinção que mais importa para a percepção de justiça do jogador.</p>
+</section>
+
+<section id="onboarding">
+  <p class="eyebrow">12 — Primeira Sessão</p>
+  <h2>Os primeiros 30 minutos</h2>
+  <div class="timeline">
+    <div class="tstep"><div class="tt">0–1 min</div><p>Abertura cômica: o jogador é apresentado como o novo editor-chefe encarregado de "motivar" uma liga desmotivada. Primeiro toque já rende Fama com feedback grande.</p></div>
+    <div class="tstep"><div class="tt">1–5 min</div><p>Primeiro Estagiário comprado — a automação nasce. Segundo herói é recrutado gratuitamente para ensinar o sistema de escalação.</p></div>
+    <div class="tstep"><div class="tt">5–15 min</div><p>Primeiras 10 Edições completadas. Sistema de Recortes e evolução é introduzido com uma duplicata garantida.</p></div>
+    <div class="tstep"><div class="tt">15–30 min</div><p>Primeiro Vilão da Capa aparece como parede suave. Jogador farma um pouco, sente o gerador esfriar, e o jogo sugere o primeiro Reboot como próximo objetivo — sem forçar.</p></div>
+  </div>
+</section>
+
+<section id="roadmap">
+  <p class="eyebrow">13 — Depois do Lançamento</p>
+  <h2>Roadmap de conteúdo</h2>
+  <ul>
+    <li><strong>Temporada 0 (lançamento):</strong> 2 arcos de campanha (~100 edições), 15 heróis, 1 camada de reboot.</li>
+    <li><strong>Temporada 1:</strong> segunda camada de prestígio ("Retcon Definitivo"), facção Mutantes Anônimos completa, Redações (guildas).</li>
+    <li><strong>Temporada 2:</strong> Batalha de Vendas (PvP assíncrono), primeiro Crossover Especial recorrente.</li>
+    <li><strong>Temporadas seguintes:</strong> novos arcos trimestrais, novas facções, eventos sazonais com heróis limitados (sempre reobteníveis depois, nunca exclusivos permanentes).</li>
+  </ul>
+</section>
+
+<section id="armadilhas">
+  <p class="eyebrow">14 — Riscos</p>
+  <h2>Armadilhas a evitar</h2>
+  <ul>
+    <li><strong>Progresso invisível:</strong> upgrade que não muda aparência ou poder perceptível vira sensação de estagnação — todo upgrade relevante precisa de leitura visual clara.</li>
+    <li><strong>Power creep sem novidade:</strong> números que sobem mas "não doem mais" — cada novo tier precisa vir com um sistema novo (sinergia, formação, evento), não só um multiplicador maior.</li>
+    <li><strong>Quebrar a promessa idle:</strong> se o progresso offline falhar ou for percebido como menor do que prometido, a confiança no gênero inteiro do jogo desmorona.</li>
+    <li><strong>Monotonia de conteúdo:</strong> mesma mecânica da edição 1 à 500 sem novos sistemas se abrindo por camada de progressão.</li>
+    <li><strong>Grind sem propósito claro:</strong> o jogador precisa sempre saber "pra que" está grindando — próximo herói, próximo reboot, próximo marco.</li>
+  </ul>
+</section>
+
+<section id="producao">
+  <p class="eyebrow">15 — Como Construir</p>
+  <h2>Plano de produção</h2>
+  <div class="timeline">
+    <div class="tstep"><div class="tt">Fase 1 · Protótipo</div><p>Loop central (clique → estagiário → empresário) funcionando com números reais de uma única linha de geradores. Objetivo: provar que a curva de custo/produção é divertida sozinha, sem arte final.</p></div>
+    <div class="tstep"><div class="tt">Fase 2 · Fatia vertical</div><p>Economia completa (3 moedas), primeiro Reboot funcional, 10 heróis com raridades e uma facção completa, 1 arco de campanha (50 edições) com 1 Vilão da Capa.</p></div>
+    <div class="tstep"><div class="tt">Fase 3 · Lançamento suave</div><p>Conteúdo da Temporada 0 completo, onboarding polido, telemetria de retenção (D1/D7/D30) e de ponto de travamento de progressão instrumentada.</p></div>
+    <div class="tstep"><div class="tt">Fase 4 · Live ops</div><p>Cadência trimestral de temporadas, eventos rotativos, ajuste fino de curva com base em dados reais de onde os jogadores travam ou abandonam.</p></div>
+  </div>
+</section>
+
+<section id="stack">
+  <p class="eyebrow">16 — Implementação</p>
+  <h2>Pilha técnica</h2>
+  <p class="lede">Prioridade declarada: rodar no PC e chegar à Steam. Como um idle game é, na prática, quase só interface e números reagindo a um relógio — sem física, sem renderização 3D — a escolha certa aqui não é uma engine de jogos tradicional, e sim tecnologia web empacotada como app nativo.</p>
+
+  <div class="callout">
+    <span class="label">Precedente do gênero</span>
+    <p><strong>Melvor Idle</strong> — um idle RPG bem estabelecido — nasceu como jogo web gratuito em JavaScript puro e, depois de validado, foi empacotado e lançado na Steam e no mobile. É essencialmente o caminho descrito para Vampire Survivors: prototipar barato numa plataforma rápida de iterar, portar depois que o jogo provar que é divertido.</p>
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Camada</th><th>Escolha</th><th>Por quê</th></tr></thead>
+      <tbody>
+        <tr><td>Linguagem</td><td>TypeScript</td><td>Tipagem evita boa parte dos bugs bobos de estado em jogos com dezenas de números interligados.</td></tr>
+        <tr><td>Framework de UI</td><td>Svelte</td><td>O gênero inteiro é "um valor muda → a tela atualiza". Svelte faz exatamente isso com pouquíssimo código.</td></tr>
+        <tr><td>Números gigantes</td><td>break_infinity.js</td><td>Biblioteca padrão da comunidade de incremental games — o <span class="mono">Number</span> do JS perde precisão muito antes do jogo ficar interessante.</td></tr>
+        <tr><td>Build/dev</td><td>Vite</td><td>Servidor rápido com recarregamento instantâneo; template oficial já integrado ao Tauri.</td></tr>
+        <tr><td>Empacotamento desktop</td><td>Tauri</td><td>Transforma o app web num executável nativo leve (Windows/Mac/Linux), mais enxuto que Electron.</td></tr>
+        <tr><td>Integração Steam</td><td>crate <span class="mono">steamworks</span> via Tauri (Rust)</td><td>Conquistas, save em nuvem e presença rica, expostos pro código TypeScript por comandos Tauri.</td></tr>
+        <tr><td>Save game</td><td>JSON serializado</td><td><span class="mono">localStorage</span> no protótipo web; arquivo real via API de arquivos do Tauri na versão desktop.</td></tr>
+        <tr><td>Controle de versão</td><td>Git</td><td>Necessário desde o primeiro protótipo — este projeto ainda não é um repositório.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><strong>Trade-off consciente:</strong> essa pilha entrega pouco "de fábrica" para efeitos visuais elaborados (partículas densas, animações complexas de combate) comparado a uma engine como Godot ou Unity — mas o gênero idle raramente precisa disso, e CSS/Canvas cobrem os efeitos leves que ele pede (números flutuantes, telas tremendo, barras de progresso).</p>
+
+  <p><strong>Próximo passo prático:</strong> um protótipo jogável do loop central (clique → Estagiário → Empresário) direto no navegador, pra validar a curva de custo/produção com números reais antes de montar o projeto completo com Vite + Tauri.</p>
+</section>
+
+<section id="construido">
+  <p class="eyebrow">17 — Estado Atual</p>
+  <h2>O que já está construído</h2>
+  <p class="lede">O projeto saiu do papel: existe um jogo rodando em <span class="mono">game/</span> (TypeScript + Svelte 5 + Vite + break_infinity.js), com o ciclo completo de um idle — não apenas o loop de clique.</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Sistema</th><th>Como funciona no jogo</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Loop central</strong></td><td>Clique manual → 12 heróis nomeados que produzem Fama passivamente. Nível substitui "comprar unidades": um herói por vaga, sem clones.</td></tr>
+        <tr><td><strong>Marcos de nível</strong></td><td>Níveis 10/25/50/100/200/400/700/1000 dobram a produção do herói (×256 no topo), com aviso de quantos níveis faltam.</td></tr>
+        <tr><td><strong>Sinergia de facção</strong></td><td>+15% para cada herói de uma facção por companheiro além do primeiro.</td></tr>
+        <tr><td><strong>Melhorias (por run)</strong></td><td>4 de clique, 5 globais e 2 por herói — destravadas por cliques, edição vencida ou nível do herói.</td></tr>
+        <tr><td><strong>Reboot (prestígio)</strong></td><td>Converte a Fama da run em Fragmentos por <span class="mono">(total/1M)^0,6</span>. 1M → 1 fragmento; 1 trilhão → 3.981.</td></tr>
+        <tr><td><strong>Retcons permanentes</strong></td><td>8 melhorias que sobrevivem ao reset: produção global, poder de clique, Fama inicial, elenco inicial, teto offline, manchetes, sindicato e piloto automático.</td></tr>
+        <tr><td><strong>Automação</strong></td><td>Destravada por Retcon. Escolhe sozinha o herói com melhor retorno por Fama, com reserva de caixa ajustável para não zerar o banco antes do chefão.</td></tr>
+        <tr><td><strong>Manchetes Quentes</strong></td><td>Evento clicável a cada 2–5 min: Frenesi ×7 por 60s, Punho Quente ×500 por 15s, ou Sorte Grande (15 min de produção instantânea).</td></tr>
+        <tr><td><strong>Campanha</strong></td><td>Edições com vilões que voltam "remasterizados"; chefão cai por DPS check e paga 25× o limiar.</td></tr>
+        <tr><td><strong>Troféus</strong></td><td>25 conquistas, cada uma +2% de produção permanente.</td></tr>
+        <tr><td><strong>Conforto</strong></td><td>Comprar ×1/×10/×100/Máx, tempo estimado até poder comprar, tela de números com o detalhamento do multiplicador global, exportar/importar save, progresso offline.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout">
+    <span class="label">Validado, não só compilado</span>
+    <p>A compra em lote foi conferida contra a série geométrica (compra exatamente o máximo possível, nunca um a mais), a curva de prestígio e a de chefões foram simuladas, e o ciclo completo — clicar, treinar, comprar melhoria, rebootar, gastar fragmento, exportar e reimportar save — foi executado ponta a ponta sem erro nem <span class="mono">NaN</span>.</p>
+  </div>
+
+  <p><strong>Próximas camadas naturais:</strong> segunda camada de prestígio (o "Retcon Definitivo" com árvore de talentos), desafios com restrição (runs sem clique, ou com só três heróis) dando perks permanentes, e o empacotamento com Tauri para virar executável de Steam.</p>
+</section>
+
+</main>
+
+<footer>
+  <p class="colophon">Ociosos — documento de design · Universo 7½ · v1</p>
+</footer>
