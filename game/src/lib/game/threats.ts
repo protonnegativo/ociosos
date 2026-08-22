@@ -35,7 +35,7 @@ export function threatFor(level: number): ThreatDef {
 
 /** Combined output (Verba/s) the roster needs to neutralize this threat. */
 export function threatThreshold(level: number): Decimal {
-  return new Decimal(100).times(Decimal.pow(2.1, level - 1));
+  return new Decimal(45).times(Decimal.pow(2.1, level - 1));
 }
 
 /** Verba awarded for closing a threat level. */
