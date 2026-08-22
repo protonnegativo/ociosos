@@ -22,6 +22,8 @@
     currentTutorialStep,
     tutorialContext,
     skipTutorial,
+    tutorialStepReady,
+    claimTutorialStep,
     pendingDossies,
     currentDossieCap,
     dossieProgress,
@@ -239,23 +241,34 @@
         {@const pct = tutorialProgress && tutorialProgress.target > 0
           ? Math.min(100, (tutorialProgress.current / tutorialProgress.target) * 100)
           : 0}
-        <section class="tutorial">
+        <section class="tutorial" class:ready={tutorialStepReady($game)}>
           <div class="tut-top">
-            <span class="tut-label label">Treinamento · etapa {$game.tutorialStep + 1} de {TUTORIAL_TOTAL}</span>
+            <span class="tut-label label">
+              {tutorialStepReady($game) ? "Etapa concluída" : "Treinamento"} · etapa {$game.tutorialStep + 1} de {TUTORIAL_TOTAL}
+            </span>
             <button class="tut-skip" onclick={skipTutorial}>pular</button>
           </div>
-          <button class="tut-task" onclick={() => openTab(tutorial.tab as TabId)}>
-            <span class="tut-title">{tutorial.title}</span>
-            <span class="tut-reward mono">recompensa: {rewardText(tutorial.reward)}</span>
-          </button>
-          <div class="tut-bar">
-            <div class="tut-fill" style="width: {pct}%"></div>
-          </div>
+          {#if tutorialStepReady($game)}
+            <div class="tut-done">
+              <p class="tut-lesson">{tutorial.lesson}</p>
+              <button class="tut-claim" onclick={claimTutorialStep}>
+                ✓ Entendi — receber {rewardText(tutorial.reward)}
+              </button>
+            </div>
+          {:else}
+            <button class="tut-task" onclick={() => openTab(tutorial.tab as TabId)}>
+              <span class="tut-title">{tutorial.title}</span>
+              <span class="tut-reward mono">recompensa: {rewardText(tutorial.reward)}</span>
+            </button>
+            <div class="tut-bar">
+              <div class="tut-fill" style="width: {pct}%"></div>
+            </div>
+          {/if}
           <div class="tut-steps">
             {#each Array(TUTORIAL_TOTAL) as _, i (i)}
               <span class="tut-pip" class:done={i < $game.tutorialStep} class:now={i === $game.tutorialStep}></span>
             {/each}
-            {#if tutorialProgress}
+            {#if tutorialProgress && !tutorialStepReady($game)}
               <span class="tut-count mono">{tutorialProgress.current}/{tutorialProgress.target}</span>
             {/if}
           </div>
@@ -649,6 +662,10 @@
     min-width: 0;
   }
 
+  .tutorial.ready {
+    background: color-mix(in srgb, var(--gain-green) 14%, var(--panel));
+    border-color: var(--gain-green-ink);
+  }
   .tutorial {
     display: flex;
     flex-direction: column;
@@ -711,6 +728,46 @@
     background: var(--power-gold);
     transition: width 0.4s ease-out;
   }
+  .tut-done {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .tut-lesson {
+    font-size: 0.86rem;
+    line-height: 1.45;
+    color: var(--paper);
+    margin: 0;
+    max-width: 68ch;
+  }
+  .tut-claim {
+    align-self: flex-start;
+    background: var(--gain-green-ink);
+    border: 1px solid var(--gain-green);
+    color: #06170a;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.84rem;
+    animation: claim-in 0.2s ease-out;
+  }
+  .tut-claim:hover {
+    background: var(--gain-green);
+  }
+  @keyframes claim-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
   .tut-steps {
     display: flex;
     align-items: center;

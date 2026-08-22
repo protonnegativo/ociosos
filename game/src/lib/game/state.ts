@@ -862,13 +862,18 @@ export function skipTutorial(): void {
   pushToast("Tutorial dispensado", "gold");
 }
 
-function checkTutorial(): void {
-  const s = get(game);
-  if (!tutorialActive(s)) return;
-  const step = TUTORIAL[s.tutorialStep];
-  if (!step.done(tutorialContext(s))) return;
+/** True once the task is satisfied and only the claim is missing. */
+export function tutorialStepReady(s: GameState): boolean {
+  const step = currentTutorialStep(s);
+  return !!step && step.done(tutorialContext(s));
+}
 
+export function claimTutorialStep(): void {
+  const s = get(game);
+  if (!tutorialStepReady(s)) return;
+  const step = TUTORIAL[s.tutorialStep];
   const r = step.reward;
+
   game.update((st) => {
     const withVerba = r.verba ? earn(st, new Decimal(r.verba)) : st;
     return {
@@ -879,10 +884,9 @@ function checkTutorial(): void {
     };
   });
 
-  const done = get(game).tutorialStep >= TUTORIAL_TOTAL;
   pushToast(
-    done
-      ? "Tutorial concluído — a agência é sua"
+    get(game).tutorialStep >= TUTORIAL_TOTAL
+      ? "Treinamento concluído — a agência é sua"
       : `Etapa ${s.tutorialStep + 1}/${TUTORIAL_TOTAL} · +${rewardText(r)}`,
     "green",
   );
@@ -1027,7 +1031,6 @@ export function startLoop(): void {
     }
 
     checkThreat(liveBuff);
-    checkTutorial();
     checkAchievements();
   }, TICK_MS);
 
