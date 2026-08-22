@@ -9,11 +9,14 @@
     dossieProgress,
     atDossieCap,
     protocolLevel,
+    protocolTierUnlocked,
+    activatedInTier,
     setAutoTrain,
     setAutoSpendFraction,
   } from "../game/state";
-  import { PROTOCOLS, protocolCost } from "../game/protocols";
+  import { PROTOCOL_TIERS, TIER_UNLOCK_REQUIREMENT, protocolsInTier, protocolCost } from "../game/protocols";
   import { formatNumber } from "../game/format";
+  import ShieldEmblem from "./ShieldEmblem.svelte";
 
   let confirming = $state(false);
   let pending = $derived(pendingDossies($game));
@@ -22,6 +25,22 @@
   let capped = $derived(atDossieCap($game));
   let progress = $derived(dossieProgress($game) * 100);
   let autoUnlocked = $derived(protocolLevel($game, "autonomo") > 0);
+
+  let tiers = $derived(
+    PROTOCOL_TIERS.map((tier) => ({
+      tier,
+      protocols: protocolsInTier(tier),
+      unlocked: protocolTierUnlocked($game, tier),
+      activated: tier > 1 ? activatedInTier($game, tier - 1) : 0,
+      need: TIER_UNLOCK_REQUIREMENT[tier] ?? 0,
+    })),
+  );
+
+  const TIER_LABEL: Record<number, string> = {
+    1: "Camada I — fundação",
+    2: "Camada II — expansão",
+    3: "Camada III — doutrina avançada",
+  };
 </script>
 
 <div class="wrap">
@@ -94,36 +113,52 @@
     </section>
   {/if}
 
-  <section>
-    <h3 class="label section-title">Protocolos permanentes</h3>
-    <div class="grid">
-      {#each PROTOCOLS as r (r.id)}
-        {@const level = $game.protocols[r.id] ?? 0}
-        {@const maxed = level >= r.maxLevel}
-        {@const cost = protocolCost(r, level)}
-        {@const affordable = !maxed && $game.dossies.gte(cost)}
-        <div class="proto-card" class:affordable class:maxed>
-          <div class="proto-emoji">{r.emoji}</div>
-          <div class="proto-body">
-            <div class="proto-top">
-              <span class="proto-name">{r.name}</span>
-              <span class="chip chip-cyan">
-                {maxed ? "MÁX" : `NV ${level}`}
-              </span>
+  <ShieldEmblem />
+
+  {#each tiers as t (t.tier)}
+    <section>
+      <h3 class="label section-title">{TIER_LABEL[t.tier]}</h3>
+      {#if t.unlocked}
+        <div class="grid">
+          {#each t.protocols as r (r.id)}
+            {@const level = $game.protocols[r.id] ?? 0}
+            {@const maxed = level >= r.maxLevel}
+            {@const cost = protocolCost(r, level)}
+            {@const affordable = !maxed && $game.dossies.gte(cost)}
+            <div class="proto-card" class:affordable class:maxed>
+              <div class="proto-emoji">{r.emoji}</div>
+              <div class="proto-body">
+                <div class="proto-top">
+                  <span class="proto-name">{r.name}</span>
+                  <span class="chip chip-cyan">
+                    {maxed ? "MÁX" : `NV ${level}`}
+                  </span>
+                </div>
+                <div class="proto-desc">{r.desc(level)}</div>
+              </div>
+              <button class="proto-buy" disabled={!affordable} onclick={() => buyProtocol(r.id)}>
+                {#if maxed}
+                  <span class="label">Completo</span>
+                {:else}
+                  <span class="mono cost">🗂️ {formatNumber(cost, 0)}</span>
+                {/if}
+              </button>
             </div>
-            <div class="proto-desc">{r.desc(level)}</div>
-          </div>
-          <button class="proto-buy" disabled={!affordable} onclick={() => buyProtocol(r.id)}>
-            {#if maxed}
-              <span class="label">Completo</span>
-            {:else}
-              <span class="mono cost">🗂️ {formatNumber(cost, 0)}</span>
-            {/if}
-          </button>
+          {/each}
         </div>
-      {/each}
-    </div>
-  </section>
+      {:else}
+        <div class="tier-locked">
+          <span class="tier-locked-emoji">🔒</span>
+          <div class="tier-locked-body">
+            <span class="tier-locked-title">Camada ainda não revelada</span>
+            <span class="tier-locked-hint mono">
+              Ative {t.need} protocolo{t.need === 1 ? "" : "s"} da camada anterior ({t.activated}/{t.need})
+            </span>
+          </div>
+        </div>
+      {/if}
+    </section>
+  {/each}
 </div>
 
 <style>
@@ -297,6 +332,37 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 0.6rem;
+  }
+
+  .tier-locked {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    background: var(--panel);
+    border: 1px dashed var(--rule);
+    border-radius: 10px;
+    padding: 0.7rem 0.9rem;
+    opacity: 0.85;
+  }
+  .tier-locked-emoji {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+  .tier-locked-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+  .tier-locked-title {
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    color: var(--text-soft);
+  }
+  .tier-locked-hint {
+    font-size: 0.7rem;
+    color: var(--text-faint);
   }
   .proto-card {
     display: flex;

@@ -3,7 +3,16 @@ import Decimal from "break_infinity.js";
 import { HEROES, HEROES_BY_ID, milestoneMultiplier, type HeroDef, type Faction } from "./heroes";
 import { threatThreshold, threatReward, threatMultiplier, threatFor } from "./threats";
 import { UPGRADES, UPGRADES_BY_ID, type UpgradeContext } from "./upgrades";
-import { PROTOCOLS_BY_ID, protocolCost, seedVerba, dossiesFor, dossieStepProgress, dossieCap } from "./protocols";
+import {
+  PROTOCOLS_BY_ID,
+  protocolCost,
+  seedVerba,
+  dossiesFor,
+  dossieStepProgress,
+  dossieCap,
+  protocolsInTier,
+  TIER_UNLOCK_REQUIREMENT,
+} from "./protocols";
 import { OPERATIONS_BY_ID, EQUIPPED_BONUS, type OperationDef } from "./operations";
 import {
   DEPARTMENTS,
@@ -297,6 +306,22 @@ function loadSave(): { state: GameState; offlineMs: number } {
 
 export function protocolLevel(s: GameState, id: string): number {
   return s.protocols[id] ?? 0;
+}
+
+/** How many Protocolos in this tier have been activated (level 1+) at least once. */
+export function activatedInTier(s: GameState, tier: number): number {
+  return protocolsInTier(tier).filter((p) => protocolLevel(s, p.id) > 0).length;
+}
+
+/**
+ * The agency's shield fills in one layer at a time: tier 1 is available from
+ * the first Dossiê, and each later tier only reveals once enough of the
+ * previous layer is actually activated — not just affordable.
+ */
+export function protocolTierUnlocked(s: GameState, tier: number): boolean {
+  if (tier <= 1) return true;
+  const need = TIER_UNLOCK_REQUIREMENT[tier] ?? 0;
+  return activatedInTier(s, tier - 1) >= need;
 }
 
 export function assignedDepartment(s: GameState, heroId: string): string {
@@ -628,6 +653,7 @@ export function buyProtocol(id: string): void {
   game.update((s) => {
     const def = PROTOCOLS_BY_ID[id];
     if (!def) return s;
+    if (!protocolTierUnlocked(s, def.tier)) return s;
     const level = s.protocols[id] ?? 0;
     if (level >= def.maxLevel) return s;
     const cost = protocolCost(def, level);

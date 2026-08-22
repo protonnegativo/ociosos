@@ -8,7 +8,16 @@ export interface ProtocolDef {
   baseCost: number;
   costRate: number;
   maxLevel: number;
+  /** Which layer of the shield this piece belongs to. */
+  tier: 1 | 2 | 3;
 }
+
+/**
+ * How many Protocolos at level 1+ in tier N-1 it takes to reveal tier N. Not
+ * everything is buyable from the first Dossiê — the agency's shield fills in
+ * one layer at a time.
+ */
+export const TIER_UNLOCK_REQUIREMENT: Record<number, number> = { 2: 2, 3: 3 };
 
 /**
  * How many Dossiês a single administration can yield. Starts at 1 — the first
@@ -37,6 +46,7 @@ export const PROTOCOLS: ProtocolDef[] = [
     baseCost: 1,
     costRate: 5,
     maxLevel: ARQUIVO_MAX_LEVEL,
+    tier: 1,
   },
   {
     id: "doutrina",
@@ -46,6 +56,7 @@ export const PROTOCOLS: ProtocolDef[] = [
     baseCost: 1,
     costRate: 1.6,
     maxLevel: 200,
+    tier: 1,
   },
   {
     id: "estrutura",
@@ -55,6 +66,7 @@ export const PROTOCOLS: ProtocolDef[] = [
     baseCost: 4,
     costRate: 3.2,
     maxLevel: 8,
+    tier: 2,
   },
   {
     id: "resposta",
@@ -64,6 +76,7 @@ export const PROTOCOLS: ProtocolDef[] = [
     baseCost: 3,
     costRate: 2.4,
     maxLevel: 7,
+    tier: 2,
   },
   {
     id: "escala",
@@ -73,6 +86,7 @@ export const PROTOCOLS: ProtocolDef[] = [
     baseCost: 4,
     costRate: 2.8,
     maxLevel: 15,
+    tier: 3,
   },
   {
     id: "instalacao",
@@ -82,6 +96,7 @@ export const PROTOCOLS: ProtocolDef[] = [
     baseCost: 3,
     costRate: 2,
     maxLevel: 40,
+    tier: 1,
   },
   {
     id: "quadro",
@@ -91,6 +106,7 @@ export const PROTOCOLS: ProtocolDef[] = [
     baseCost: 6,
     costRate: 3.4,
     maxLevel: 12,
+    tier: 2,
   },
   {
     id: "turno-noturno",
@@ -100,6 +116,7 @@ export const PROTOCOLS: ProtocolDef[] = [
     baseCost: 5,
     costRate: 2.4,
     maxLevel: 6,
+    tier: 2,
   },
   {
     id: "escuta",
@@ -109,6 +126,7 @@ export const PROTOCOLS: ProtocolDef[] = [
     baseCost: 8,
     costRate: 2.6,
     maxLevel: 5,
+    tier: 3,
   },
   {
     id: "autonomo",
@@ -118,6 +136,7 @@ export const PROTOCOLS: ProtocolDef[] = [
     baseCost: 40,
     costRate: 1,
     maxLevel: 1,
+    tier: 3,
   },
   {
     id: "interdepartamental",
@@ -127,10 +146,17 @@ export const PROTOCOLS: ProtocolDef[] = [
     baseCost: 25,
     costRate: 3,
     maxLevel: 10,
+    tier: 3,
   },
 ];
 
 export const PROTOCOLS_BY_ID: Record<string, ProtocolDef> = Object.fromEntries(PROTOCOLS.map((p) => [p.id, p]));
+
+export const PROTOCOL_TIERS = [1, 2, 3] as const;
+
+export function protocolsInTier(tier: number): ProtocolDef[] {
+  return PROTOCOLS.filter((p) => p.tier === tier);
+}
 
 export function protocolCost(def: ProtocolDef, level: number): Decimal {
   return new Decimal(def.baseCost).times(Decimal.pow(def.costRate, level)).ceil();
