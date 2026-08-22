@@ -625,7 +625,9 @@ export function upgradeContext(s: GameState): UpgradeContext {
 
 export function availableUpgrades(s: GameState) {
   const ctx = upgradeContext(s);
-  return UPGRADES.filter((u) => !s.upgrades.includes(u.id) && u.unlocked(ctx));
+  // UPGRADES is grouped by kind (global, then hero), not by price — sort so
+  // the cheapest, most immediately useful purchase always shows up first.
+  return UPGRADES.filter((u) => !s.upgrades.includes(u.id) && u.unlocked(ctx)).sort((a, b) => a.cost - b.cost);
 }
 
 export function buyUpgrade(id: string): void {

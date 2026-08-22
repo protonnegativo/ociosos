@@ -11,7 +11,9 @@
   let ctx = $derived(upgradeContext($game));
   let available = $derived(availableUpgrades($game));
   let owned = $derived($game.upgrades.map((id) => UPGRADES_BY_ID[id]).filter(Boolean));
-  let locked = $derived(UPGRADES.filter((u) => !$game.upgrades.includes(u.id) && !u.unlocked(ctx)));
+  let locked = $derived(
+    UPGRADES.filter((u) => !$game.upgrades.includes(u.id) && !u.unlocked(ctx)).sort((a, b) => a.cost - b.cost),
+  );
 </script>
 
 <div class="wrap">
