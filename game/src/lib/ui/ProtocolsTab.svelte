@@ -93,8 +93,8 @@
         <span class="reserve-hint">Manter reserva ajuda a neutralizar a próxima ameaça.</span>
       </div>
 
+      <div class="auto-sep"></div>
       {#if autoOpsUnlocked}
-        <div class="auto-sep"></div>
         <div class="auto-head">
           <span class="label">Operações automáticas</span>
           <label class="switch">
@@ -105,6 +105,14 @@
         <p class="auto-copy">
           Monta e despacha equipes sozinho, sempre puxando quem está de Patrulha — nunca tira ninguém da
           Investigação ou da Logística.
+        </p>
+      {:else}
+        <div class="auto-head">
+          <span class="label muted">🔒 Operações automáticas</span>
+        </div>
+        <p class="auto-copy muted">
+          Compre o Comando Autônomo de novo, agora pro nível 2, em Protocolos permanentes logo abaixo — a segunda
+          compra libera o despacho automático de operações.
         </p>
       {/if}
     </section>
@@ -267,6 +275,13 @@
     font-size: 0.78rem;
     color: var(--text-soft);
     margin: 0.4rem 0 0.7rem;
+  }
+  .auto-copy.muted {
+    font-style: italic;
+    color: var(--text-faint);
+  }
+  .auto-head .label.muted {
+    color: var(--text-faint);
   }
   .reserve {
     display: flex;
