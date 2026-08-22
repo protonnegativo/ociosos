@@ -151,19 +151,57 @@ function formatSeed(level: number): string {
 /** Verba earned this administration before a restructuring pays anything. */
 export const RESTRUCTURE_THRESHOLD = new Decimal(1_000_000);
 
-/** Uncapped payout as a plain number — its fractional part drives the bar. */
-export function dossiesRaw(totalVerbaThisRun: Decimal): number {
-  if (totalVerbaThisRun.lte(0)) return 0;
-  const raw = totalVerbaThisRun.div(1_000_000).pow(0.6).toNumber();
-  return Number.isFinite(raw) ? raw : Number.MAX_VALUE;
+/**
+ * Verba required to have earned exactly `n` Dossiês this run.
+ *
+ * A plain geometric ladder (base × rate^n, same shape as every other cost in
+ * the game) converges to a *constant* time gap between successive Dossiês
+ * once production is compounding — neither harder nor easier, just flat. A
+ * smooth root of total Verba (the original formula) is worse: under
+ * compounding production its time gaps actively *shrink*, so Dossiê 10 could
+ * arrive faster than Dossiê 2 despite costing far more Verba.
+ *
+ * The n² term here is what fixes that: it makes the cost ratio between
+ * consecutive Dossiês grow with n, which is what it takes to keep pace with
+ * (and eventually outrun) exponential production growth. Verified by
+ * simulation across several production-doubling speeds: every Dossiê after
+ * the first — which is always the slowest, since it is the only one ramping
+ * up from zero — takes strictly longer than the one before it.
+ */
+const DOSSIE_RATE = 1.5;
+const DOSSIE_ACCEL = 1.03;
+
+export function dossieVerbaNeeded(n: number): Decimal {
+  if (n <= 0) return new Decimal(0);
+  return RESTRUCTURE_THRESHOLD.times(Decimal.pow(DOSSIE_RATE, n)).times(Decimal.pow(DOSSIE_ACCEL, n * n));
 }
 
-/**
- * Restructuring payout. Exponent 0.6 sits in the validated 0.5–0.8 band, with
- * the Arquivo ceiling applied on top.
- */
+/** How many Dossiês this much Verba affords — inverts dossieVerbaNeeded via the quadratic formula. */
 export function dossiesFor(totalVerbaThisRun: Decimal, cap: number): Decimal {
   if (totalVerbaThisRun.lt(RESTRUCTURE_THRESHOLD)) return new Decimal(0);
-  const raw = totalVerbaThisRun.div(1_000_000).pow(0.6).floor();
-  return Decimal.min(raw, new Decimal(cap));
+  const lnRatio = totalVerbaThisRun.div(RESTRUCTURE_THRESHOLD).ln();
+  const a = Math.log(DOSSIE_ACCEL);
+  const b = Math.log(DOSSIE_RATE);
+  const n = (-b + Math.sqrt(b * b + 4 * a * lnRatio)) / (2 * a);
+  let floored = Number.isFinite(n) ? Math.max(0, Math.floor(n)) : Number.MAX_VALUE;
+  // The sqrt above loses a hair of precision right at an exact boundary
+  // (Verba landing exactly on a threshold could floor to one Dossiê short).
+  // Nudge in either direction against the real cost curve to correct it.
+  if (Number.isFinite(floored)) {
+    while (dossieVerbaNeeded(floored + 1).lte(totalVerbaThisRun)) floored++;
+    while (floored > 0 && dossieVerbaNeeded(floored).gt(totalVerbaThisRun)) floored--;
+  }
+  return Decimal.min(new Decimal(floored), new Decimal(cap));
+}
+
+/** 0..1 progress from the current Dossiê count toward the next one. */
+export function dossieStepProgress(totalVerbaThisRun: Decimal, cap: number): number {
+  const earned = dossiesFor(totalVerbaThisRun, cap);
+  if (earned.gte(cap)) return 1;
+  const n = earned.toNumber();
+  const floor = dossieVerbaNeeded(n);
+  const ceil = dossieVerbaNeeded(n + 1);
+  const span = ceil.minus(floor);
+  if (span.lte(0)) return 0;
+  return Math.max(0, Math.min(1, totalVerbaThisRun.minus(floor).div(span).toNumber()));
 }

@@ -3,7 +3,7 @@ import Decimal from "break_infinity.js";
 import { HEROES, HEROES_BY_ID, milestoneMultiplier, type HeroDef, type Faction } from "./heroes";
 import { threatThreshold, threatReward, threatMultiplier, threatFor } from "./threats";
 import { UPGRADES, UPGRADES_BY_ID, type UpgradeContext } from "./upgrades";
-import { PROTOCOLS_BY_ID, protocolCost, seedVerba, dossiesFor, dossiesRaw, dossieCap } from "./protocols";
+import { PROTOCOLS_BY_ID, protocolCost, seedVerba, dossiesFor, dossieStepProgress, dossieCap } from "./protocols";
 import { OPERATIONS_BY_ID, EQUIPPED_BONUS, type OperationDef } from "./operations";
 import {
   DEPARTMENTS,
@@ -653,8 +653,7 @@ export function atDossieCap(s: GameState): boolean {
 /** 0..1 fill toward the next Dossiê, or full once the ceiling is reached. */
 export function dossieProgress(s: GameState): number {
   if (atDossieCap(s)) return 1;
-  const raw = dossiesRaw(s.totalVerbaThisRun);
-  return Math.max(0, Math.min(1, raw - Math.floor(raw)));
+  return dossieStepProgress(s.totalVerbaThisRun, currentDossieCap(s));
 }
 
 export function canRestructure(s: GameState): boolean {
