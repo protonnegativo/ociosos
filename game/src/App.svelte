@@ -24,6 +24,7 @@
     skipTutorial,
     tutorialStepReady,
     claimTutorialStep,
+    tutorialAnchorOf,
     pendingDossies,
     currentDossieCap,
     dossieProgress,
@@ -138,7 +139,7 @@
   let tutorial = $derived(currentTutorialStep($game));
   let tutorialProgress = $derived.by(() => {
     if (!tutorial?.progress) return null;
-    return tutorial.progress(tutorialContext($game));
+    return tutorial.progress(tutorialContext($game), tutorialAnchorOf($game));
   });
 
   let objective = $derived(
@@ -257,7 +258,7 @@
             </div>
           {:else}
             <button class="tut-task" onclick={() => openTab(tutorial.tab as TabId)}>
-              <span class="tut-title">{tutorial.title}</span>
+              <span class="tut-title">{tutorial.title(tutorialAnchorOf($game))}</span>
               <span class="tut-reward mono">recompensa: {rewardText(tutorial.reward)}</span>
             </button>
             <div class="tut-bar">

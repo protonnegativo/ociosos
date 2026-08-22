@@ -33,9 +33,20 @@ export function threatFor(level: number): ThreatDef {
   return { ...base, name: `${base.name} — reincidência ${cycle + 1}` };
 }
 
+/**
+ * Gaps start wide and settle into the long-run rate. A new hero tier multiplies
+ * production by roughly ten at once, so with a flat step the early levels got
+ * crossed several at a time and read as "it skipped from 2 to 4".
+ */
+function stepRate(level: number): number {
+  return 2.1 + 1.7 * Math.exp(-(level - 1) / 5);
+}
+
 /** Combined output (Verba/s) the roster needs to neutralize this threat. */
 export function threatThreshold(level: number): Decimal {
-  return new Decimal(45).times(Decimal.pow(2.1, level - 1));
+  let t = new Decimal(45);
+  for (let n = 1; n < level; n++) t = t.times(stepRate(n));
+  return t;
 }
 
 /** Verba awarded for closing a threat level. */

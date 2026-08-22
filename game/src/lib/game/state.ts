@@ -81,6 +81,8 @@ export interface GameState {
   seenTabs: string[];
   /** Index into TUTORIAL; equal to the length once finished or skipped. */
   tutorialStep: number;
+  /** State snapshot from when the current step began, for relative targets. */
+  tutorialAnchor: TutorialContext | null;
 
   // Settings
   autoTrain: boolean;
@@ -155,6 +157,7 @@ function freshState(): GameState {
     runStart: Date.now(),
     seenTabs: [],
     tutorialStep: 0,
+    tutorialAnchor: null,
     autoTrain: false,
     autoSpendFraction: 0.5,
     lastTick: Date.now(),
@@ -186,6 +189,7 @@ function serialize(s: GameState): string {
     runStart: s.runStart,
     seenTabs: s.seenTabs,
     tutorialStep: s.tutorialStep,
+    tutorialAnchor: s.tutorialAnchor,
     autoTrain: s.autoTrain,
     autoSpendFraction: s.autoSpendFraction,
     lastTick: Date.now(),
@@ -260,6 +264,7 @@ function deserialize(raw: string): GameState {
     // Saves from before the tutorial existed skip it: those players already
     // know the loop, and replaying step one would be nonsense.
     tutorialStep: typeof p.tutorialStep === "number" ? p.tutorialStep : p.v ? TUTORIAL_TOTAL : 0,
+    tutorialAnchor: p.tutorialAnchor ?? null,
     autoTrain: !!p.autoTrain,
     autoSpendFraction: typeof p.autoSpendFraction === "number" ? p.autoSpendFraction : 0.5,
     lastTick: typeof p.lastTick === "number" ? p.lastTick : Date.now(),
@@ -863,9 +868,14 @@ export function skipTutorial(): void {
 }
 
 /** True once the task is satisfied and only the claim is missing. */
+/** Falls back to the live context so a save without an anchor still works. */
+export function tutorialAnchorOf(s: GameState): TutorialContext {
+  return s.tutorialAnchor ?? tutorialContext(s);
+}
+
 export function tutorialStepReady(s: GameState): boolean {
   const step = currentTutorialStep(s);
-  return !!step && step.done(tutorialContext(s));
+  return !!step && step.done(tutorialContext(s), tutorialAnchorOf(s));
 }
 
 export function claimTutorialStep(): void {
@@ -881,6 +891,8 @@ export function claimTutorialStep(): void {
       intel: withVerba.intel + (r.intel ?? 0),
       equipamento: withVerba.equipamento + (r.equipamento ?? 0),
       tutorialStep: st.tutorialStep + 1,
+      // The next step measures from here, so it can never open pre-completed.
+      tutorialAnchor: tutorialContext(st),
     };
   });
 
@@ -894,9 +906,14 @@ export function claimTutorialStep(): void {
 
 // --- Threat ladder --------------------------------------------------------
 
-function checkThreat(buff: ActiveBuff | null): void {
+const THREAT_MIN_GAP_MS = 2_500;
+let lastThreatAt = 0;
+
+function checkThreat(buff: ActiveBuff | null, now: number): void {
   const s = get(game);
+  if (now - lastThreatAt < THREAT_MIN_GAP_MS) return;
   if (!totalProduction(s, buff).gte(threatThreshold(s.threat))) return;
+  lastThreatAt = now;
 
   const reward = threatReward(s.threat);
   const t = threatFor(s.threat);
@@ -1030,7 +1047,7 @@ export function startLoop(): void {
       if (pick) trainHero(pick, 1);
     }
 
-    checkThreat(liveBuff);
+    checkThreat(liveBuff, now);
     checkAchievements();
   }, TICK_MS);
 
