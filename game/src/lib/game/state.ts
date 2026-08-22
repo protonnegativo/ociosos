@@ -69,6 +69,7 @@ export interface GameState {
   // Field operations
   activeOps: ActiveOp[];
   opCooldowns: Record<string, number>;
+  equippedOpsCompleted: number;
 
   // Stats
   totalDispatches: number; // legacy counter, no longer increments
@@ -150,6 +151,7 @@ function freshState(): GameState {
     achievements: [],
     activeOps: [],
     opCooldowns: {},
+    equippedOpsCompleted: 0,
     totalDispatches: 0,
     restructurings: 0,
     alertsClaimed: 0,
@@ -182,6 +184,7 @@ function serialize(s: GameState): string {
     achievements: s.achievements,
     activeOps: s.activeOps,
     opCooldowns: s.opCooldowns,
+    equippedOpsCompleted: s.equippedOpsCompleted,
     totalDispatches: s.totalDispatches,
     restructurings: s.restructurings,
     alertsClaimed: s.alertsClaimed,
@@ -255,6 +258,7 @@ function deserialize(raw: string): GameState {
     achievements: Array.isArray(p.achievements) ? p.achievements : [],
     activeOps,
     opCooldowns: typeof p.opCooldowns === "object" && p.opCooldowns ? p.opCooldowns : {},
+    equippedOpsCompleted: typeof p.equippedOpsCompleted === "number" ? p.equippedOpsCompleted : 0,
     totalDispatches: p.totalDispatches ?? p.totalClicks ?? 0,
     restructurings: p.restructurings ?? p.reboots ?? 0,
     alertsClaimed: p.alertsClaimed ?? p.manchetesClicked ?? 0,
@@ -305,10 +309,21 @@ export function departmentSlots(s: GameState, def: DepartmentDef): number {
   return def.baseSlots + protocolLevel(s, "estrutura");
 }
 
+/** Present and producing right now — excludes anyone away on an operation. */
 export function heroesInDepartment(s: GameState, deptId: string): string[] {
   return HEROES.filter(
     (h) => (s.levels[h.id] ?? 0) > 0 && !isDeployed(s, h.id) && assignedDepartment(s, h.id) === deptId,
   ).map((h) => h.id);
+}
+
+/**
+ * Everyone posted here, present or away on a mission. This is what capacity
+ * checks must use: a hero's post stays theirs while they're deployed, so the
+ * slot can never look free to someone else and then overflow when they
+ * return.
+ */
+export function heroesAssignedToDepartment(s: GameState, deptId: string): string[] {
+  return HEROES.filter((h) => (s.levels[h.id] ?? 0) > 0 && assignedDepartment(s, h.id) === deptId).map((h) => h.id);
 }
 
 export function departmentUnlocked(s: GameState, def: DepartmentDef): boolean {
@@ -342,14 +357,18 @@ export function markTabSeen(id: string): void {
   game.update((s) => (s.seenTabs.includes(id) ? s : { ...s, seenTabs: [...s.seenTabs, id] }));
 }
 
-/** Moves a hero to a post, refusing if the department is already full. */
+/**
+ * Moves a hero to a post, refusing if the department is already full.
+ * Reassigning a hero who is currently deployed is allowed — it only changes
+ * where they report once the mission ends, never the active operation itself.
+ */
 export function assignHero(heroId: string, deptId: string): boolean {
   const s = get(game);
   const def = DEPARTMENTS_BY_ID[deptId];
   if (!def || !departmentUnlocked(s, def)) return false;
-  if ((s.levels[heroId] ?? 0) <= 0 || isDeployed(s, heroId)) return false;
+  if ((s.levels[heroId] ?? 0) <= 0) return false;
   if (assignedDepartment(s, heroId) === deptId) return true;
-  if (heroesInDepartment(s, deptId).length >= departmentSlots(s, def)) return false;
+  if (heroesAssignedToDepartment(s, deptId).length >= departmentSlots(s, def)) return false;
   game.update((st) => ({ ...st, assignments: { ...st.assignments, [heroId]: deptId } }));
   return true;
 }
@@ -440,12 +459,16 @@ function departmentRate(s: GameState, deptId: string, rate: (level: number) => n
   return total;
 }
 
+function supportScale(s: GameState): number {
+  return 1 + 0.2 * protocolLevel(s, "escala");
+}
+
 export function intelPerSecond(s: GameState): number {
-  return departmentRate(s, "investigacao", intelRate);
+  return departmentRate(s, "investigacao", intelRate) * supportScale(s);
 }
 
 export function equipPerSecond(s: GameState): number {
-  return departmentRate(s, "logistica", equipRate);
+  return departmentRate(s, "logistica", equipRate) * supportScale(s);
 }
 
 export function totalProduction(s: GameState, buff: ActiveBuff | null): Decimal {
@@ -736,6 +759,7 @@ function settleOperations(now: number, buff: ActiveBuff | null): void {
       activeOps: st.activeOps.filter((o) => o !== op),
       opCooldowns: { ...st.opCooldowns, [def.id]: now + def.cooldownMs },
       opsCompleted: st.opsCompleted + 1,
+      equippedOpsCompleted: st.equippedOpsCompleted + (op.equipped ? 1 : 0),
     }));
     pushToast(`${def.emoji} ${def.name} concluída — +${formatNumber(payout)} de Verba`, "green");
   }
@@ -822,6 +846,11 @@ function achievementContext(s: GameState): AchievementContext {
     restructurings: s.restructurings,
     alertsClaimed: s.alertsClaimed,
     opsCompleted: s.opsCompleted,
+    equippedOpsCompleted: s.equippedOpsCompleted,
+    // Any unlocked department currently staffed to its cap, present or away.
+    deptAtCapacity: DEPARTMENTS.some(
+      (d) => !d.unlimited && departmentUnlocked(s, d) && heroesAssignedToDepartment(s, d.id).length >= departmentSlots(s, d),
+    ),
   };
 }
 
@@ -844,7 +873,7 @@ export function tutorialContext(s: GameState): TutorialContext {
   return {
     recruited: totalRecruited(s),
     maxLevel: Math.max(0, ...HEROES.map((h) => s.levels[h.id] ?? 0)),
-    investigating: heroesInDepartment(s, "investigacao").length,
+    investigating: heroesAssignedToDepartment(s, "investigacao").length,
     intel: s.intel,
     equipamento: s.equipamento,
     opsCompleted: s.opsCompleted,

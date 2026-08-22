@@ -9,6 +9,9 @@ export interface AchievementContext {
   restructurings: number;
   alertsClaimed: number;
   opsCompleted: number;
+  equippedOpsCompleted: number;
+  /** True if any unlocked department is currently staffed to its cap. */
+  deptAtCapacity: boolean;
 }
 
 export interface AchievementDef {
@@ -157,6 +160,20 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     desc: "Conclua 25 operações de campo.",
     emoji: "🎖️",
     check: (c) => c.opsCompleted >= 25,
+  },
+  {
+    id: "ops-3",
+    name: "Saída Equipada",
+    desc: "Conclua uma operação com a equipe totalmente equipada.",
+    emoji: "🔩",
+    check: (c) => c.equippedOpsCompleted >= 1,
+  },
+  {
+    id: "dept-1",
+    name: "Departamento Lotado",
+    desc: "Preencha todas as vagas de um departamento.",
+    emoji: "🏢",
+    check: (c) => c.deptAtCapacity,
   },
   {
     id: "manchete-1",

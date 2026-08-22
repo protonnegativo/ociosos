@@ -5,6 +5,7 @@
     assignHero,
     departmentSlots,
     heroesInDepartment,
+    heroesAssignedToDepartment,
     departmentUnlocked,
     availableHeroes,
     heroOutputRaw,
@@ -23,14 +24,21 @@
 
   let columns = $derived(
     DEPARTMENTS.map((def) => {
-      const members = heroesInDepartment($game, def.id);
+      // "present" is who's actually producing right now; "away" is posted here
+      // but out on a mission. Away heroes still hold their slot — that's what
+      // stops the department from silently overflowing when they get back.
+      const present = heroesInDepartment($game, def.id);
+      const away = heroesAssignedToDepartment($game, def.id).filter((id) => !present.includes(id));
+      const occupied = present.length + away.length;
       const slots = departmentSlots($game, def);
       return {
         def,
-        members,
+        present,
+        away,
+        occupied,
         slots,
         unlocked: departmentUnlocked($game, def),
-        empty: def.unlimited ? 0 : Math.max(0, slots - members.length),
+        empty: def.unlimited ? 0 : Math.max(0, slots - occupied),
       };
     }),
   );
@@ -77,8 +85,8 @@
     if (!heroId) return false;
     const col = columns.find((c) => c.def.id === deptId);
     if (!col || !col.unlocked) return false;
-    if (col.members.includes(heroId)) return false;
-    return col.def.unlimited || col.members.length < col.slots;
+    if (col.present.includes(heroId) || col.away.includes(heroId)) return false;
+    return col.def.unlimited || col.occupied < col.slots;
   }
 
   function startDrag(e: DragEvent, heroId: string) {
@@ -109,7 +117,7 @@
       class="dept"
       class:locked={!col.unlocked}
       class:drop-ok={dragging && hoverDept === col.def.id}
-      class:drop-no={dragging && !canDrop(col.def.id, dragging) && !col.members.includes(dragging)}
+      class:drop-no={dragging && !canDrop(col.def.id, dragging) && !col.present.includes(dragging) && !col.away.includes(dragging)}
       ondragover={(e) => overDept(e, col.def.id)}
       ondragleave={() => (hoverDept = hoverDept === col.def.id ? null : hoverDept)}
       ondrop={(e) => dropOn(e, col.def.id)}
@@ -119,7 +127,7 @@
         <span class="dept-emoji">{col.def.emoji}</span>
         <span class="dept-name">{col.def.name}</span>
         <span class="dept-count mono">
-          {#if !col.unlocked}🔒{:else if col.def.unlimited}{col.members.length}{:else}{col.members.length}/{col.slots}{/if}
+          {#if !col.unlocked}🔒{:else if col.def.unlimited}{col.present.length}{:else}{col.occupied}/{col.slots}{/if}
         </span>
       </header>
 
@@ -127,15 +135,15 @@
         <p class="dept-lock">{lockReason(col.def)}</p>
       {:else}
         <p class="dept-desc">{col.def.desc}</p>
-        <div class="dept-total mono">▲ {totalOutput(col.def, col.members)}</div>
-        {#if col.members.length > 0}
+        <div class="dept-total mono">▲ {totalOutput(col.def, col.present)}</div>
+        {#if col.occupied > 0}
           <p class="dept-tip">
             arraste para mover{#if !col.def.unlimited} · ✕ devolve à Patrulha{/if}
           </p>
         {/if}
 
         <ul class="slots">
-          {#each col.members as id (id)}
+          {#each col.present as id (id)}
             <li
               class="slot filled"
               class:being-dragged={dragging === id}
@@ -160,6 +168,32 @@
                   ✕
                 </button>
               {/if}
+            </li>
+          {/each}
+
+          {#each col.away as id (id)}
+            <li
+              class="slot away"
+              class:being-dragged={dragging === id}
+              draggable="true"
+              ondragstart={(e) => startDrag(e, id)}
+              ondragend={() => {
+                dragging = null;
+                hoverDept = null;
+              }}
+            >
+              <span class="grip" aria-hidden="true">⠿</span>
+              <span class="slot-emoji">{HEROES_BY_ID[id].emoji}</span>
+              <span class="slot-name">{HEROES_BY_ID[id].name}</span>
+              <span class="slot-away-tag">🎯 em campo</span>
+              <button
+                class="slot-release"
+                title="Devolver {HEROES_BY_ID[id].name} à Patrulha ao voltar"
+                aria-label="Devolver {HEROES_BY_ID[id].name} à Patrulha ao voltar"
+                onclick={() => release(id)}
+              >
+                ✕
+              </button>
             </li>
           {/each}
 
@@ -296,6 +330,23 @@
   }
   .slot.being-dragged {
     opacity: 0.4;
+  }
+  .slot.away {
+    background: color-mix(in srgb, var(--rule) 35%, transparent);
+    border: 1px dashed var(--rule);
+    cursor: grab;
+    opacity: 0.75;
+  }
+  .slot.away:active {
+    cursor: grabbing;
+  }
+  .slot-away-tag {
+    flex-shrink: 0;
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--text-faint);
   }
   .grip {
     flex-shrink: 0;

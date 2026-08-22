@@ -66,6 +66,15 @@ export const PROTOCOLS: ProtocolDef[] = [
     maxLevel: 7,
   },
   {
+    id: "escala",
+    name: "Escala Departamental",
+    desc: (lv) => `Intel e Equipamento rendem +20% por nível. Atual: +${lv * 20}%`,
+    emoji: "📈",
+    baseCost: 4,
+    costRate: 2.8,
+    maxLevel: 15,
+  },
+  {
     id: "instalacao",
     name: "Verba de Instalação",
     desc: (lv) => `Cada nova administração começa com ${formatSeed(lv)} de Verba.`,

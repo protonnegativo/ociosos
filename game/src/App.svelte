@@ -17,7 +17,7 @@
     tabUnlocked,
     markTabSeen,
     totalRecruited,
-    heroesInDepartment,
+    heroesAssignedToDepartment,
     tutorialActive,
     currentTutorialStep,
     tutorialContext,
@@ -143,7 +143,7 @@
   });
 
   let objective = $derived(
-    currentObjective($game, $production, totalRecruited($game), heroesInDepartment($game, "investigacao").length),
+    currentObjective($game, $production, totalRecruited($game), heroesAssignedToDepartment($game, "investigacao").length),
   );
   let objectivePct = $derived(
     objective.target > 0 ? Math.min(100, (objective.current / objective.target) * 100) : 0,
