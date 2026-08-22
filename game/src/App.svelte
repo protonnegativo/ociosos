@@ -198,10 +198,16 @@
       </div>
 
       {#if posterHeroes.length > 0}
-        <div class="poster-block">
-          {#each posterHeroes as p (p.def.id)}
-            <HeroBody heroId={p.def.id} tier={p.tier} width={76} />
-          {/each}
+        <div class="poster-panel">
+          <span class="poster-title label">Efetivo</span>
+          <div class="poster-block">
+            {#each posterHeroes as p (p.def.id)}
+              <div class="poster-card">
+                <HeroBody heroId={p.def.id} tier={p.tier} width={140} />
+                <span class="poster-name">{p.def.name}</span>
+              </div>
+            {/each}
+          </div>
         </div>
       {/if}
 
@@ -339,7 +345,7 @@
 
   .layout {
     display: grid;
-    grid-template-columns: 290px 1fr;
+    grid-template-columns: 380px 1fr;
     gap: 1.5rem;
     align-items: start;
   }
@@ -524,11 +530,41 @@
     color: var(--text-faint);
   }
 
+  .poster-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    background: linear-gradient(160deg, var(--panel-raised), var(--panel) 85%);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: 0.9rem 0.8rem 1rem;
+  }
+  .poster-title {
+    font-size: 0.7rem;
+    color: var(--power-gold);
+    text-align: center;
+    letter-spacing: 0.1em;
+  }
   .poster-block {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 0.4rem;
+    gap: 0.7rem 0.5rem;
+  }
+  .poster-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+  }
+  .poster-name {
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    font-size: 0.66rem;
+    text-align: center;
+    color: var(--text-soft);
   }
 
   .frag-block {
