@@ -4,7 +4,7 @@ import { HEROES, HEROES_BY_ID, milestoneMultiplier, type HeroDef, type Faction }
 import { threatThreshold, threatReward, threatMultiplier, threatFor } from "./threats";
 import { UPGRADES, UPGRADES_BY_ID, type UpgradeContext } from "./upgrades";
 import { PROTOCOLS_BY_ID, protocolCost, seedVerba, dossiesFor, dossieStepProgress, dossieCap } from "./protocols";
-import { OPERATIONS_BY_ID, EQUIPPED_BONUS, type OperationDef } from "./operations";
+import { OPERATIONS, OPERATIONS_BY_ID, EQUIPPED_BONUS, type OperationDef } from "./operations";
 import {
   DEPARTMENTS,
   DEPARTMENTS_BY_ID,
@@ -91,6 +91,8 @@ export interface GameState {
   autoTrain: boolean;
   /** Fraction of Verba the automation may spend on a single purchase. */
   autoSpendFraction: number;
+  /** Comando Autônomo nível 2 — launches field operations on its own. */
+  autoOps: boolean;
 
   lastTick: number;
 }
@@ -165,6 +167,7 @@ function freshState(): GameState {
     tutorialAnchor: null,
     autoTrain: false,
     autoSpendFraction: 0.5,
+    autoOps: false,
     lastTick: Date.now(),
   };
 }
@@ -199,6 +202,7 @@ function serialize(s: GameState): string {
     tutorialAnchor: s.tutorialAnchor,
     autoTrain: s.autoTrain,
     autoSpendFraction: s.autoSpendFraction,
+    autoOps: s.autoOps,
     lastTick: Date.now(),
   });
 }
@@ -276,6 +280,7 @@ function deserialize(raw: string): GameState {
     tutorialAnchor: p.tutorialAnchor ?? null,
     autoTrain: !!p.autoTrain,
     autoSpendFraction: typeof p.autoSpendFraction === "number" ? p.autoSpendFraction : 0.5,
+    autoOps: !!p.autoOps,
     lastTick: typeof p.lastTick === "number" ? p.lastTick : Date.now(),
   };
 }
@@ -753,6 +758,10 @@ export function setAutoSpendFraction(f: number): void {
   game.update((s) => ({ ...s, autoSpendFraction: Math.min(1, Math.max(0.05, f)) }));
 }
 
+export function setAutoOps(on: boolean): void {
+  game.update((s) => ({ ...s, autoOps: on }));
+}
+
 // --- Field operations -----------------------------------------------------
 
 export function opAvailable(s: GameState, def: OperationDef, now = Date.now()): boolean {
@@ -812,6 +821,46 @@ export function deployOperation(defId: string, heroIds: string[]): boolean {
     ],
   }));
   return true;
+}
+
+// --- Auto-ops (Comando Autônomo nível 2) -----------------------------------
+
+/**
+ * Patrol only — never Investigação or Logística. Those posts are staffed on
+ * purpose to feed Intel/Equipamento, which operations themselves spend;
+ * auto-ops raiding them would be feeding itself from its own supply line.
+ */
+function autoOpsCandidates(s: GameState): HeroDef[] {
+  return availableHeroes(s).filter((h) => assignedDepartment(s, h.id) === DEFAULT_DEPARTMENT);
+}
+
+/** Best squad this operation can field from patrol right now, or null if there aren't enough free hands. */
+function bestSquadFor(s: GameState, def: OperationDef, buff: ActiveBuff | null): string[] | null {
+  const pool = autoOpsCandidates(s);
+  if (pool.length < def.slots) return null;
+
+  const byOutputDesc = (a: HeroDef, b: HeroDef) => heroOutputRaw(s, b, buff).minus(heroOutputRaw(s, a, buff)).toNumber();
+  const topOverall = [...pool].sort(byOutputDesc).slice(0, def.slots).map((h) => h.id);
+  if (!def.preferredRole) return topOverall;
+
+  const roleMatched = pool.filter((h) => h.role === def.preferredRole);
+  if (roleMatched.length < def.slots) return topOverall;
+  const topRole = [...roleMatched].sort(byOutputDesc).slice(0, def.slots).map((h) => h.id);
+
+  // The role bonus isn't automatically worth it if fielding it means
+  // benching the squad's strongest hero — whichever actually pays more wins.
+  return opPayout(s, def, topRole, buff).gte(opPayout(s, def, topOverall, buff)) ? topRole : topOverall;
+}
+
+function autoDeployOps(buff: ActiveBuff | null): void {
+  for (const def of OPERATIONS) {
+    const s = get(game);
+    if (!opAvailable(s, def)) continue;
+    if (s.intel < def.intelCost) continue;
+    const squad = bestSquadFor(s, def, buff);
+    if (!squad) continue;
+    deployOperation(def.id, squad);
+  }
 }
 
 function settleOperations(now: number, buff: ActiveBuff | null): void {
@@ -1148,6 +1197,9 @@ export function startLoop(): void {
     if (s.autoTrain && protocolLevel(s, "autonomo") > 0) {
       const pick = bestAutoBuy(s, liveBuff);
       if (pick) trainHero(pick, 1);
+    }
+    if (s.autoOps && protocolLevel(s, "autonomo") >= 2) {
+      autoDeployOps(liveBuff);
     }
 
     checkThreat(liveBuff, now);

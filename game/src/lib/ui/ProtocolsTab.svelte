@@ -10,6 +10,7 @@
     protocolLevel,
     setAutoTrain,
     setAutoSpendFraction,
+    setAutoOps,
   } from "../game/state";
   import { formatNumber } from "../game/format";
   import ProtocolTree from "./ProtocolTree.svelte";
@@ -21,6 +22,7 @@
   let capped = $derived(atDossieCap($game));
   let progress = $derived(dossieProgress($game) * 100);
   let autoUnlocked = $derived(protocolLevel($game, "autonomo") > 0);
+  let autoOpsUnlocked = $derived(protocolLevel($game, "autonomo") >= 2);
 </script>
 
 <div class="wrap">
@@ -90,6 +92,21 @@
         />
         <span class="reserve-hint">Manter reserva ajuda a neutralizar a próxima ameaça.</span>
       </div>
+
+      {#if autoOpsUnlocked}
+        <div class="auto-sep"></div>
+        <div class="auto-head">
+          <span class="label">Operações automáticas</span>
+          <label class="switch">
+            <input type="checkbox" checked={$game.autoOps} onchange={(e) => setAutoOps(e.currentTarget.checked)} />
+            <span>{$game.autoOps ? "Ligado" : "Desligado"}</span>
+          </label>
+        </div>
+        <p class="auto-copy">
+          Monta e despacha equipes sozinho, sempre puxando quem está de Patrulha — nunca tira ninguém da
+          Investigação ou da Logística.
+        </p>
+      {/if}
     </section>
   {/if}
 
@@ -268,6 +285,12 @@
     font-size: 0.66rem;
     color: var(--text-faint);
     font-style: italic;
+  }
+
+  .auto-sep {
+    height: 1px;
+    background: var(--rule);
+    margin: 0.2rem 0;
   }
 
   .tree-hint {

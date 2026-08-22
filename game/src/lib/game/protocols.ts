@@ -123,11 +123,14 @@ export const PROTOCOLS: ProtocolDef[] = [
   {
     id: "autonomo",
     name: "Comando Autônomo",
-    desc: () => "Libera o treinamento automático do efetivo.",
+    desc: (lv) =>
+      lv >= 2
+        ? "Automatiza o treinamento do efetivo e o envio de operações de campo."
+        : "Automatiza o treinamento do efetivo. No nível 2, também as operações de campo.",
     emoji: "🤖",
     baseCost: 40,
-    costRate: 1,
-    maxLevel: 1,
+    costRate: 20,
+    maxLevel: 2,
     requires: "quadro",
   },
   {
