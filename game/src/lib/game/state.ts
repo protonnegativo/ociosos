@@ -417,7 +417,7 @@ export function factionSynergy(s: GameState, faction: Faction): number {
   return 1 + 0.15 * Math.max(0, recruitedInFaction(s, faction) - 1);
 }
 
-function upgradeMultFor(s: GameState, kind: "global"): number {
+export function upgradeMultFor(s: GameState, kind: "global"): number {
   let mult = 1;
   for (const id of s.upgrades) {
     const u = UPGRADES_BY_ID[id];
@@ -824,7 +824,11 @@ export function claimAlerta(): void {
   const durationScale = 1 + 0.25 * protocolLevel(s, "escuta");
   const roll = Math.random();
 
-  if (roll < 0.6) {
+  // The lump is worth more in raw Verba (900s of production vs. the buff's
+  // ~360s-equivalent over its window), so it's the common roll. The buff
+  // stays the rarer treat — its appeal is the spectacle and being able to
+  // shove production over a threat threshold on demand, not the raw total.
+  if (roll < 0.4) {
     activeBuff.set({
       kind: "forca",
       label: "Força-tarefa ×7",
