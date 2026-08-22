@@ -197,20 +197,6 @@
         <div class="boss-current mono">▲ {formatRate($production)} agora</div>
       </div>
 
-      {#if posterHeroes.length > 0}
-        <div class="poster-panel">
-          <span class="poster-title label">Efetivo</span>
-          <div class="poster-block">
-            {#each posterHeroes as p (p.def.id)}
-              <div class="poster-card">
-                <HeroBody heroId={p.def.id} tier={p.tier} width={140} />
-                <span class="poster-name">{p.def.name}</span>
-              </div>
-            {/each}
-          </div>
-        </div>
-      {/if}
-
       {#if tabUnlocked($game, "protocolos")}
       <div class="frag-block" class:full={atDossieCap($game)}>
         <div class="frag-head">
@@ -228,6 +214,20 @@
           <div class="frag-banked mono">{formatNumber($game.dossies, 0)} arquivados</div>
         {/if}
       </div>
+      {/if}
+
+      {#if posterHeroes.length > 0}
+        <div class="poster-panel">
+          <span class="poster-title label">Efetivo</span>
+          <div class="poster-block">
+            {#each posterHeroes as p (p.def.id)}
+              <div class="poster-card">
+                <HeroBody heroId={p.def.id} tier={p.tier} width={140} />
+                <span class="poster-name">{p.def.name}</span>
+              </div>
+            {/each}
+          </div>
+        </div>
       {/if}
     </aside>
 
