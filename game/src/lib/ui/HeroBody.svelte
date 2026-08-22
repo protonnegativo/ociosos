@@ -3,17 +3,27 @@
   import { FACES } from "../game/faces";
   import HeroFace from "./HeroFace.svelte";
 
-  let { heroId, tier = 0, width = 140 }: { heroId: string; tier?: number; width?: number } = $props();
+  let {
+    heroId,
+    tier = 0,
+    width = 140,
+    prestiged = false,
+  }: { heroId: string; tier?: number; width?: number; prestiged?: boolean } = $props();
 
-  let stage = $derived(BODIES[heroId]?.[Math.min(2, Math.max(0, tier))]);
+  // Prestige always shows the best costume/pose the hero has art for — the
+  // upgrade is the point, not a costume the player happens to own.
+  let stage = $derived(BODIES[heroId]?.[prestiged ? 2 : Math.min(2, Math.max(0, tier))]);
   let skin = $derived(FACES[heroId]?.skin ?? "#c9a37a");
   let scale = $derived(width / 140);
 </script>
 
 {#if stage}
   <div class="body" style="width: {width}px; height: {width * 1.6}px; --scale: {scale}">
-    {#if stage.glow}
-      <div class="glow" style="--glow: {stage.glow}"></div>
+    {#if prestiged}
+      <div class="rays"></div>
+    {/if}
+    {#if stage.glow || prestiged}
+      <div class="glow" class:legendary={prestiged} style="--glow: {prestiged ? '#ffd76a' : stage.glow}"></div>
     {/if}
 
     <svg class="torso" viewBox="0 0 120 170" width={width} height={width * (170 / 120)}>
@@ -78,6 +88,10 @@
     <div class="head" style="top: {-6 * scale}px">
       <HeroFace {heroId} size={54 * scale} />
     </div>
+
+    {#if prestiged}
+      <div class="crown" style="top: {-22 * scale}px; font-size: {1.3 * scale}rem">👑</div>
+    {/if}
   </div>
 {/if}
 
@@ -120,5 +134,44 @@
     50% {
       opacity: 1;
     }
+  }
+  .glow.legendary {
+    width: 105%;
+  }
+
+  .rays {
+    position: absolute;
+    top: 4%;
+    left: 50%;
+    width: 135%;
+    aspect-ratio: 1;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background: repeating-conic-gradient(
+      from 0deg,
+      color-mix(in srgb, #ffd76a 20%, transparent) 0deg 8deg,
+      transparent 8deg 20deg
+    );
+    animation: rays-spin 14s linear infinite;
+    opacity: 0.65;
+  }
+  @keyframes rays-spin {
+    to {
+      transform: translateX(-50%) rotate(360deg);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .rays {
+      animation: none;
+    }
+  }
+
+  .crown {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    line-height: 1;
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5));
   }
 </style>

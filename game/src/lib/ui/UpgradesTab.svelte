@@ -1,10 +1,22 @@
 <script lang="ts">
-  import { game, production, buyUpgrade, availableUpgrades, upgradeContext, heroVisualTier } from "../game/state";
+  import {
+    game,
+    production,
+    buyUpgrade,
+    availableUpgrades,
+    upgradeContext,
+    heroVisualTier,
+    heroPrestiged,
+    heroCanPrestige,
+    prestigeHero,
+  } from "../game/state";
   import { UPGRADES, UPGRADES_BY_ID } from "../game/upgrades";
   import { HEROES } from "../game/heroes";
   import { BODIES } from "../game/bodies";
   import { formatNumber, timeToAfford } from "../game/format";
   import HeroBody from "./HeroBody.svelte";
+
+  let confirmingPrestige = $state<string | null>(null);
 
   let ctx = $derived(upgradeContext($game));
   // The hero-specific half lives in its own section below, right next to the
@@ -22,12 +34,21 @@
 
   let heroCards = $derived(
     HEROES.filter((h) => ($game.levels[h.id] ?? 0) > 0 && BODIES[h.id]).map((h) => {
-      const defs = [UPGRADES_BY_ID[`hero-${h.id}-a`], UPGRADES_BY_ID[`hero-${h.id}-b`]].filter(
+      const prestiged = heroPrestiged($game, h.id);
+      // Pre-prestige: the level-10/30 pair. Post-prestige: they're retired
+      // (bought or not) and the level-100 pair takes over — same escalation,
+      // one arc further.
+      const ids = prestiged ? [`hero-${h.id}-c`, `hero-${h.id}-d`] : [`hero-${h.id}-a`, `hero-${h.id}-b`];
+      const defs = ids.map((id) => UPGRADES_BY_ID[id]).filter((u): u is NonNullable<typeof u> => !!u);
+      const basic = [UPGRADES_BY_ID[`hero-${h.id}-a`], UPGRADES_BY_ID[`hero-${h.id}-b`]].filter(
         (u): u is NonNullable<typeof u> => !!u,
       );
       return {
         def: h,
         tier: heroVisualTier($game, h.id),
+        prestiged,
+        canPrestige: heroCanPrestige($game, h.id),
+        missingBasic: basic.filter((u) => !$game.upgrades.includes(u.id)).map((u) => u.name.split(": ")[1] ?? u.name),
         upgrades: defs.map((u) => ({
           def: u,
           owned: $game.upgrades.includes(u.id),
@@ -46,7 +67,7 @@
       <div class="hero-grid">
         {#each heroCards as h (h.def.id)}
           <div class="hero-up-card">
-            <HeroBody heroId={h.def.id} tier={h.tier} width={92} />
+            <HeroBody heroId={h.def.id} tier={h.tier} prestiged={h.prestiged} width={92} />
             <span class="hero-up-name">{h.def.name}</span>
             <div class="hero-up-list">
               {#each h.upgrades as u (u.def.id)}
@@ -67,6 +88,32 @@
                 {/if}
               {/each}
             </div>
+
+            {#if h.canPrestige}
+              {#if confirmingPrestige === h.def.id}
+                <div class="prestige-confirm">
+                  {#if h.missingBasic.length > 0}
+                    <p class="prestige-warn">
+                      Ainda não comprou: {h.missingBasic.join(", ")}. Depois de prestigiar, não dá mais pra comprar.
+                    </p>
+                  {/if}
+                  <div class="prestige-actions">
+                    <button class="btn-ghost" onclick={() => (confirmingPrestige = null)}>Cancelar</button>
+                    <button
+                      class="prestige-confirm-btn"
+                      onclick={() => {
+                        prestigeHero(h.def.id);
+                        confirmingPrestige = null;
+                      }}>Confirmar</button
+                    >
+                  </div>
+                </div>
+              {:else}
+                <button class="prestige-btn" onclick={() => (confirmingPrestige = h.def.id)}>
+                  ⭐ Prestígio disponível
+                </button>
+              {/if}
+            {/if}
           </div>
         {/each}
       </div>
@@ -221,6 +268,68 @@
   }
   .hu-row.buyable:disabled .hu-cost {
     color: var(--text-faint);
+  }
+
+  .prestige-btn {
+    width: 100%;
+    margin-top: 0.15rem;
+    background: linear-gradient(160deg, color-mix(in srgb, var(--power-gold) 35%, var(--panel-raised)), var(--panel-raised));
+    border: 1px solid var(--power-gold);
+    color: var(--power-gold);
+    border-radius: 6px;
+    padding: 0.35rem 0.5rem;
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    font-size: 0.66rem;
+    animation: prestige-pulse 2s ease-in-out infinite;
+  }
+  @keyframes prestige-pulse {
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 color-mix(in srgb, var(--power-gold) 45%, transparent);
+    }
+    50% {
+      box-shadow: 0 0 8px 1px color-mix(in srgb, var(--power-gold) 45%, transparent);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .prestige-btn {
+      animation: none;
+    }
+  }
+
+  .prestige-confirm {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-top: 0.15rem;
+    padding-top: 0.4rem;
+    border-top: 1px dashed var(--rule);
+  }
+  .prestige-warn {
+    font-size: 0.62rem;
+    color: var(--hero-red);
+    margin: 0;
+    text-align: center;
+  }
+  .prestige-actions {
+    display: flex;
+    gap: 0.4rem;
+    justify-content: center;
+  }
+  .prestige-confirm-btn {
+    background: var(--power-gold);
+    color: var(--ink);
+    border: none;
+    border-radius: 6px;
+    padding: 0.3rem 0.7rem;
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.66rem;
   }
 
   .up-card {

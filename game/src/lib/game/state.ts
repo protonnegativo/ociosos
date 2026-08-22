@@ -63,6 +63,8 @@ export interface GameState {
 
   // Progression systems
   upgrades: string[]; // wiped on restructuring
+  /** Hero ids that hit level 100 and cashed in their prestige — wiped on restructuring, same as upgrades. */
+  heroPrestige: string[];
   protocols: Record<string, number>; // permanent
   achievements: string[]; // permanent
 
@@ -147,6 +149,7 @@ function freshState(): GameState {
     threat: 1,
     maxThreat: 1,
     upgrades: [],
+    heroPrestige: [],
     protocols: {},
     achievements: [],
     activeOps: [],
@@ -180,6 +183,7 @@ function serialize(s: GameState): string {
     threat: s.threat,
     maxThreat: s.maxThreat,
     upgrades: s.upgrades,
+    heroPrestige: s.heroPrestige,
     protocols: s.protocols,
     achievements: s.achievements,
     activeOps: s.activeOps,
@@ -254,6 +258,7 @@ function deserialize(raw: string): GameState {
     threat: p.threat ?? p.edition ?? 1,
     maxThreat: p.maxThreat ?? p.maxEdition ?? p.threat ?? p.edition ?? 1,
     upgrades: Array.isArray(p.upgrades) ? p.upgrades.filter((u: string) => u in UPGRADES_BY_ID) : [],
+    heroPrestige: Array.isArray(p.heroPrestige) ? p.heroPrestige.filter((h: unknown) => typeof h === "string") : [],
     protocols,
     achievements: Array.isArray(p.achievements) ? p.achievements : [],
     activeOps,
@@ -436,11 +441,36 @@ function heroUpgradeMult(s: GameState, heroId: string): number {
   return mult;
 }
 
-/** 0 = just recruited, 1 = first hero upgrade owned, 2 = both owned — drives how detailed HeroBody's art gets. */
+/** 0 = just recruited, 1 = first hero upgrade owned, 2 = both owned, 3 = prestiged — drives how detailed HeroBody's art gets. */
 export function heroVisualTier(s: GameState, heroId: string): number {
+  if (heroPrestiged(s, heroId)) return 3;
   if (s.upgrades.includes(`hero-${heroId}-b`)) return 2;
   if (s.upgrades.includes(`hero-${heroId}-a`)) return 1;
   return 0;
+}
+
+export function heroPrestiged(s: GameState, heroId: string): boolean {
+  return s.heroPrestige.includes(heroId);
+}
+
+/** Prestige opens at level 100 — the milestone table's biggest permanent step already lives there. */
+const HERO_PRESTIGE_LEVEL = 100;
+
+export function heroCanPrestige(s: GameState, heroId: string): boolean {
+  return !heroPrestiged(s, heroId) && (s.levels[heroId] ?? 0) >= HERO_PRESTIGE_LEVEL;
+}
+
+/**
+ * Free, one-way, per hero. Retires the level-10/30 upgrades for good (buy
+ * them first if you want them — that's exactly what the confirmation in
+ * UpgradesTab.svelte is there to catch) in exchange for two new ones and a
+ * dramatically better HeroBody stage.
+ */
+export function prestigeHero(heroId: string): void {
+  game.update((s) => {
+    if (!heroCanPrestige(s, heroId)) return s;
+    return { ...s, heroPrestige: [...s.heroPrestige, heroId] };
+  });
 }
 
 export function achievementMult(s: GameState): number {
@@ -627,7 +657,7 @@ export function trainHero(id: string, amount: BuyAmount = 1): void {
 }
 
 export function upgradeContext(s: GameState): UpgradeContext {
-  return { levels: s.levels, threat: s.maxThreat, totalDispatches: s.totalDispatches };
+  return { levels: s.levels, threat: s.maxThreat, totalDispatches: s.totalDispatches, prestiged: s.heroPrestige };
 }
 
 export function availableUpgrades(s: GameState) {
@@ -704,6 +734,7 @@ export function doRestructure(): void {
       assignments: {},
       threat: 1,
       upgrades: [],
+      heroPrestige: [],
       activeOps: [],
       opCooldowns: {},
       restructurings: s.restructurings + 1,

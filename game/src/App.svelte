@@ -26,6 +26,7 @@
     availableHeroes,
     opAvailable,
     heroVisualTier,
+    heroPrestiged,
     type BuyAmount,
   } from "./lib/game/state";
   import { threatThreshold, threatFor } from "./lib/game/threats";
@@ -137,6 +138,7 @@
     HEROES.filter((h) => BODIES[h.id] && ($game.levels[h.id] ?? 0) > 0).map((h) => ({
       def: h,
       tier: heroVisualTier($game, h.id),
+      prestiged: heroPrestiged($game, h.id),
     })),
   );
 </script>
@@ -222,7 +224,7 @@
           <div class="poster-block">
             {#each posterHeroes as p (p.def.id)}
               <div class="poster-card">
-                <HeroBody heroId={p.def.id} tier={p.tier} width={140} />
+                <HeroBody heroId={p.def.id} tier={p.tier} prestiged={p.prestiged} width={140} />
                 <span class="poster-name">{p.def.name}</span>
               </div>
             {/each}
