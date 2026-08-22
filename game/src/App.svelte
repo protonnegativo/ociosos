@@ -364,6 +364,17 @@
   <button class="debug-btn wide" onclick={() => debugAddDossies(50)}>+50 dossiês</button>
   <button class="debug-btn wide" onclick={() => debugAddSupport(500)}>+500 intel/equip</button>
   <button class="debug-btn wide" onclick={debugSpawnAlerta}>Disparar alerta</button>
+
+  <div class="debug-sep"></div>
+  {#if confirmingReset}
+    <p class="debug-hint">Apaga tudo e reinicia o tutorial.</p>
+    <div class="debug-actions">
+      <button class="debug-btn" onclick={() => (confirmingReset = false)}>cancelar</button>
+      <button class="debug-btn danger" onclick={doReset}>confirmar</button>
+    </div>
+  {:else}
+    <button class="debug-btn wide danger" onclick={() => (confirmingReset = true)}>Resetar do zero</button>
+  {/if}
 </aside>
 
 <style>
