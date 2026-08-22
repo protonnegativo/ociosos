@@ -560,7 +560,10 @@ export function maxAffordableLevels(def: HeroDef, level: number, verba: Decimal)
 export function levelsToBuy(def: HeroDef, level: number, verba: Decimal, amount: BuyAmount): number {
   const affordable = maxAffordableLevels(def, level, verba);
   if (amount === "max") return affordable;
-  return Math.min(amount, affordable);
+  // 10x/100x is all-or-nothing: buying fewer than the selected amount would
+  // silently downgrade the purchase without telling the player. Treat it the
+  // same as not being able to afford a single level.
+  return affordable >= amount ? amount : 0;
 }
 
 // --- Store bootstrap ------------------------------------------------------

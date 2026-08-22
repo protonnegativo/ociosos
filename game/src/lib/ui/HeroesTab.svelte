@@ -3,7 +3,6 @@
     game,
     production,
     trainHero,
-    heroCost,
     heroCostBulk,
     heroOutput,
     levelsToBuy,
@@ -33,8 +32,11 @@
     HEROES.map((def) => {
       const level = $game.levels[def.id] ?? 0;
       const n = levelsToBuy(def, level, $game.verba, buyAmount);
-      const shown = Math.max(1, n);
-      const cost = n > 0 ? heroCostBulk(def, level, n) : heroCost(def, level);
+      // When 10x/100x isn't affordable, n comes back 0 — but the card should
+      // still price and preview the batch the player actually selected, not
+      // silently fall back to a single level.
+      const shown = n > 0 ? n : buyAmount === "max" ? 1 : buyAmount;
+      const cost = heroCostBulk(def, level, shown);
 
       // Measured as if the hero were on patrol. Posted to a department they add
       // no Verba, so the raw impact reads +0 — true but useless, since what the
@@ -133,7 +135,7 @@
       <button class="buy-btn" disabled={!row.affordable} onclick={() => trainHero(row.def.id, buyAmount)}>
         <span class="label">
           {row.recruited ? "Treinar" : "Alistar"}
-          {#if row.buyCount > 1}<span class="qty">×{row.buyCount}</span>{/if}
+          {#if row.shownCount > 1}<span class="qty">×{row.shownCount}</span>{/if}
         </span>
         <span class="mono cost">{row.cost.lte(0) ? "grátis" : formatNumber(row.cost, 0)}</span>
         <span class="mono gain">↗ +{formatRate(row.buyGain)}</span>
