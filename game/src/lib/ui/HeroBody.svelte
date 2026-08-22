@@ -57,6 +57,14 @@
           stroke="#7a7d82" stroke-width="6" stroke-linecap="round"
           transform={stage.pose === "action" ? "rotate(-15 100 45)" : ""}
         />
+      {:else if stage.prop === "hammer"}
+        <g transform={stage.pose === "action" ? "rotate(-20 100 45)" : ""}>
+          <line x1="90" y1="60" x2="108" y2="26" stroke="#6b5a45" stroke-width="6" stroke-linecap="round" />
+          <rect x="98" y="10" width="20" height="14" rx="2" fill="#7a7d82" transform="rotate(28 108 17)" />
+        </g>
+      {:else if stage.prop === "shield"}
+        <ellipse cx="14" cy="60" rx="16" ry="20" fill="#1f6b3a" stroke="#d9a441" stroke-width="3" />
+        <circle cx="14" cy="60" r="6" fill="#d9a441" />
       {/if}
 
       <!-- torso -->

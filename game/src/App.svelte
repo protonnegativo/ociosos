@@ -200,7 +200,7 @@
       {#if posterHeroes.length > 0}
         <div class="poster-block">
           {#each posterHeroes as p (p.def.id)}
-            <HeroBody heroId={p.def.id} tier={p.tier} width={96} />
+            <HeroBody heroId={p.def.id} tier={p.tier} width={76} />
           {/each}
         </div>
       {/if}

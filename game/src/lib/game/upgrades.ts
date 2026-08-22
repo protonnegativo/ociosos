@@ -148,6 +148,72 @@ const HERO_FLAVOR: Record<string, { aName: string; aDesc: string; bName: string;
     bName: "Rapaz-Barata: carapaça irradiada",
     bDesc: "A explosão nuclear não matou — só deixou mais resistente. Produz 3x mais.",
   },
+  torneco: {
+    aName: "Torneco: martelo emprestado",
+    aDesc: "Ainda não é digno, mas o RH deixou levar pra casa. Produz o dobro.",
+    bName: "Torneco: trono provisório",
+    bDesc: "Reconquistou o reino. A dívida, infelizmente, é vitalícia. Produz 3x mais.",
+  },
+  "alho-poro": {
+    aName: "Capitão Alho-Poró: fita remasterizada",
+    aDesc: "Redescobriu a trilha sonora e ficou insuportável de animado. Produz o dobro.",
+    bName: "Capitão Alho-Poró: curadoria definitiva",
+    bDesc: "A tripulação parou de discordar — desistiu. Produz 3x mais.",
+  },
+  "viuva-cinza": {
+    aName: "Viúva Cinza: dossiê atualizado",
+    aDesc: "Os dois currículos, o de espiã e o de RH, finalmente batem. Produz o dobro.",
+    bName: "Viúva Cinza: contato duplo",
+    bDesc: "Ninguém sabe pra quem ela realmente responde. Nem ela. Produz 3x mais.",
+  },
+  "capitao-brasil": {
+    aName: "Capitão Brasil: escudo restaurado",
+    aDesc: "As referências continuam de 1943, mas o equipamento é novo. Produz o dobro.",
+    bName: "Capitão Brasil: valores intactos",
+    bDesc: "Ninguém teve coragem de atualizá-lo — e funciona. Produz 3x mais.",
+  },
+  "ghomme-de-ferro": {
+    aName: "Ghomme de Ferro: armadura patrocinada",
+    aDesc: "Impecável por fora. Por dentro, ainda é ele mesmo. Produz o dobro.",
+    bName: "Ghomme de Ferro: liga inteira",
+    bDesc: "Banca todo mundo e faz questão que ninguém esqueça. Produz 3x mais.",
+  },
+  ciumento: {
+    aName: "Ciumento: cicatrização acelerada",
+    aDesc: "O corpo esquece rápido. A cabeça, nunca. Produz o dobro.",
+    bName: "Ciumento: rancor arquivado",
+    bDesc: "Tem uma lista. A lista tem década. Produz 3x mais.",
+  },
+  "a-massa": {
+    aName: "A Massa: sétima sessão",
+    aDesc: "O sexto terapeuta recomendou parar de trabalhar. Ele discordou educadamente. Produz o dobro.",
+    bName: "A Massa: alta médica",
+    bDesc: "Voltou no dia seguinte mesmo assim. Produz 3x mais.",
+  },
+  "ima-neto": {
+    aName: "Ímã-Neto: registro atualizado",
+    aDesc: "O jurídico ainda tenta decidir se ele é réu ou testemunha. Produz o dobro.",
+    bName: "Ímã-Neto: polaridade revista",
+    bDesc: "Virou herói de novo. Dessa vez juram que é definitivo. Produz 3x mais.",
+  },
+  "doutor-estranhissimo": {
+    aName: "Doutor Estranhíssimo: futuro consultado",
+    aDesc: "Viu esse resultado chegando de longe. Produz o dobro.",
+    bName: "Doutor Estranhíssimo: prazo previsto",
+    bDesc: "Em nenhum futuro a liga entrega no prazo. Nesse, quase. Produz 3x mais.",
+  },
+  "pantera-parda": {
+    aName: "Pantera Parda: tecnologia liberada",
+    aDesc: "Compareceu à reunião e, de quebra, trouxe upgrade. Produz o dobro.",
+    bName: "Pantera Parda: reinado consolidado",
+    bDesc: "Governa uma nação inteira sem faltar a uma reunião sequer. Produz 3x mais.",
+  },
+  "tio-thanao": {
+    aName: "Tio Thanão: planilha equilibrada",
+    aDesc: "Trocou metade do universo por metade dos recursos. Mais eficiente. Produz o dobro.",
+    bName: "Tio Thanão: consultoria vitalícia",
+    bDesc: "Contrato renovado automaticamente — igual antes, sem o extermínio. Produz 3x mais.",
+  },
 };
 
 // Two per hero, gated behind that hero's own level — rewards specializing.
