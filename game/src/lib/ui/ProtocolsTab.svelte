@@ -95,7 +95,10 @@
 
   <section>
     <h3 class="label section-title">Protocolos permanentes</h3>
-    <p class="tree-hint">Cada Protocolo revela o próximo ao ser ativado. Ninguém sabe de saída até onde vai.</p>
+    <p class="tree-hint">
+      Cada Protocolo revela o próximo ao ser ativado — o efeito de cada um já aparece antes de comprar, só o ícone
+      fica em segredo até lá.
+    </p>
     <ProtocolTree />
   </section>
 </div>

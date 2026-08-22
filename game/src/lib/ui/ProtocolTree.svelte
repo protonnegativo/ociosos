@@ -44,8 +44,8 @@
             <span class="node-level mono">{c.maxed ? "MÁX" : `NV ${c.level}`}</span>
           {:else}
             <div class="node-emoji mystery">🔒</div>
-            <div class="node-name">Protocolo classificado</div>
-            <div class="node-desc">O efeito só é revelado ao ativar.</div>
+            <div class="node-name">{c.def.name}</div>
+            <div class="node-desc">{c.def.desc(c.level)}</div>
             <button class="node-buy" disabled={!c.affordable} onclick={() => buyProtocol(c.def.id)}>
               <span class="mono">🗂️ {formatNumber(c.cost, 0)}</span>
             </button>
@@ -121,7 +121,7 @@
     line-height: 1.15;
   }
   .node:not(.revealed) .node-name {
-    color: var(--text-faint);
+    color: var(--text-soft);
   }
   .node-desc {
     font-size: 0.68rem;
@@ -130,7 +130,6 @@
   }
   .node:not(.revealed) .node-desc {
     font-style: italic;
-    color: var(--text-faint);
   }
   .node-buy {
     width: 100%;
