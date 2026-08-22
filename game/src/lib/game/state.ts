@@ -334,16 +334,32 @@ export function departmentUnlocked(s: GameState, def: DepartmentDef): boolean {
  * Systems arrive one at a time instead of all six tabs greeting a new player.
  * Each gate is placed just after the thing that makes the tab make sense.
  */
+// Index of a tutorial step by id — used to gate a tab behind "the step that
+// teaches it has become current", so the tutorial's own "go here" click never
+// gets bounced back by the guard below.
+const OPERATION_STEP = TUTORIAL.findIndex((t) => t.id === "operation");
+const UPGRADE_STEP = TUTORIAL.findIndex((t) => t.id === "upgrade");
+
+/**
+ * While the tutorial is running, tabs unlock one at a time, in the exact order
+ * the tutorial teaches them — not by whatever milestone the player happens to
+ * hit first. Reestruturar in particular stays locked until the tutorial is
+ * fully done: reaching it early would let a restructure wipe the roster mid
+ * lesson (levels, assignments and Intel/Equipamento all reset), leaving a
+ * stale tutorial step behind. Finishing the tutorial once — or skipping it —
+ * unlocks everything for good; nothing here ever re-locks afterward.
+ */
 export function tabUnlocked(s: GameState, id: string): boolean {
+  const tutorialDone = s.tutorialStep >= TUTORIAL_TOTAL;
   switch (id) {
     case "efetivo":
       return true;
     case "operacoes":
-      return s.intel > 0 || s.opsCompleted > 0 || s.activeOps.length > 0;
+      return tutorialDone || s.tutorialStep >= OPERATION_STEP;
     case "melhorias":
-      return s.maxThreat >= 2;
+      return tutorialDone || s.tutorialStep >= UPGRADE_STEP;
     case "protocolos":
-      return s.dossies.gt(0) || s.restructurings > 0 || s.totalVerbaThisRun.gte(100_000);
+      return tutorialDone;
     case "condecoracoes":
       return s.achievements.length > 0;
     case "stats":
