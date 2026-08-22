@@ -436,6 +436,13 @@ function heroUpgradeMult(s: GameState, heroId: string): number {
   return mult;
 }
 
+/** 0 = just recruited, 1 = first hero upgrade owned, 2 = both owned — drives how detailed HeroBody's art gets. */
+export function heroVisualTier(s: GameState, heroId: string): number {
+  if (s.upgrades.includes(`hero-${heroId}-b`)) return 2;
+  if (s.upgrades.includes(`hero-${heroId}-a`)) return 1;
+  return 0;
+}
+
 export function achievementMult(s: GameState): number {
   return 1 + ACHIEVEMENT_BONUS * s.achievements.length;
 }

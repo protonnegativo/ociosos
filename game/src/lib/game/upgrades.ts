@@ -134,33 +134,52 @@ const GLOBAL_UPGRADES: UpgradeDef[] = [
   },
 ];
 
+/**
+ * Per-hero re-flavoring of the two upgrades below — same cost/mult/level gate
+ * for everyone, but a hero with a written-out arc gets copy (and, in
+ * HeroBody.svelte, a visual stage) that actually matches their gag instead of
+ * the generic "destaque em campo" template. Heroes not listed here just keep
+ * the template; this fills in one at a time.
+ */
+const HERO_FLAVOR: Record<string, { aName: string; aDesc: string; bName: string; bDesc: string }> = {
+  "rapaz-barata": {
+    aName: "Rapaz-Barata: casaco de sobrevivente",
+    aDesc: "Depois da segunda explosão, aprendeu a andar preparado. Produz o dobro.",
+    bName: "Rapaz-Barata: carapaça irradiada",
+    bDesc: "A explosão nuclear não matou — só deixou mais resistente. Produz 3x mais.",
+  },
+};
+
 // Two per hero, gated behind that hero's own level — rewards specializing.
-const HERO_UPGRADES: UpgradeDef[] = HEROES.flatMap((h) => [
-  {
-    id: `hero-${h.id}-a`,
-    name: `${h.name}: destaque em campo`,
-    desc: `${h.name} produz o dobro.`,
-    kind: "hero" as const,
-    cost: h.recruitCost * 60,
-    mult: 2,
-    heroId: h.id,
-    emoji: h.emoji,
-    reqText: `${h.name} nível 10`,
-    unlocked: (c: UpgradeContext) => (c.levels[h.id] ?? 0) >= 10,
-  },
-  {
-    id: `hero-${h.id}-b`,
-    name: `${h.name}: comando de célula`,
-    desc: `${h.name} produz 3x mais.`,
-    kind: "hero" as const,
-    cost: h.recruitCost * 1_200,
-    mult: 3,
-    heroId: h.id,
-    emoji: h.emoji,
-    reqText: `${h.name} nível 30`,
-    unlocked: (c: UpgradeContext) => (c.levels[h.id] ?? 0) >= 30,
-  },
-]);
+const HERO_UPGRADES: UpgradeDef[] = HEROES.flatMap((h) => {
+  const flavor = HERO_FLAVOR[h.id];
+  return [
+    {
+      id: `hero-${h.id}-a`,
+      name: flavor?.aName ?? `${h.name}: destaque em campo`,
+      desc: flavor?.aDesc ?? `${h.name} produz o dobro.`,
+      kind: "hero" as const,
+      cost: h.recruitCost * 60,
+      mult: 2,
+      heroId: h.id,
+      emoji: h.emoji,
+      reqText: `${h.name} nível 10`,
+      unlocked: (c: UpgradeContext) => (c.levels[h.id] ?? 0) >= 10,
+    },
+    {
+      id: `hero-${h.id}-b`,
+      name: flavor?.bName ?? `${h.name}: comando de célula`,
+      desc: flavor?.bDesc ?? `${h.name} produz 3x mais.`,
+      kind: "hero" as const,
+      cost: h.recruitCost * 1_200,
+      mult: 3,
+      heroId: h.id,
+      emoji: h.emoji,
+      reqText: `${h.name} nível 30`,
+      unlocked: (c: UpgradeContext) => (c.levels[h.id] ?? 0) >= 30,
+    },
+  ];
+});
 
 export const UPGRADES: UpgradeDef[] = [...GLOBAL_UPGRADES, ...HERO_UPGRADES];
 

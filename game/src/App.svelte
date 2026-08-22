@@ -25,10 +25,13 @@
     atDossieCap,
     availableHeroes,
     opAvailable,
+    heroVisualTier,
     type BuyAmount,
   } from "./lib/game/state";
   import { threatThreshold, threatFor } from "./lib/game/threats";
   import { OPERATIONS } from "./lib/game/operations";
+  import { BODIES } from "./lib/game/bodies";
+  import { HEROES } from "./lib/game/heroes";
   import { currentObjective } from "./lib/game/objectives";
   import { now } from "./lib/game/clock";
   import { formatNumber, formatRate, formatDuration } from "./lib/game/format";
@@ -40,6 +43,7 @@
   import StatsTab from "./lib/ui/StatsTab.svelte";
   import TutorialPanel from "./lib/ui/TutorialPanel.svelte";
   import DebugPanel from "./lib/ui/DebugPanel.svelte";
+  import HeroBody from "./lib/ui/HeroBody.svelte";
 
   onMount(() => startLoop());
 
@@ -126,6 +130,15 @@
   let objectivePct = $derived(
     objective.target > 0 ? Math.min(100, (objective.current / objective.target) * 100) : 0,
   );
+
+  // Prototype: only heroes with art in BODIES get the full-body poster
+  // treatment for now. Everyone else stays a round face portrait elsewhere.
+  let posterHeroes = $derived(
+    HEROES.filter((h) => BODIES[h.id] && ($game.levels[h.id] ?? 0) > 0).map((h) => ({
+      def: h,
+      tier: heroVisualTier($game, h.id),
+    })),
+  );
 </script>
 
 <div class="page">
@@ -183,6 +196,14 @@
         </div>
         <div class="boss-current mono">▲ {formatRate($production)} agora</div>
       </div>
+
+      {#if posterHeroes.length > 0}
+        <div class="poster-block">
+          {#each posterHeroes as p (p.def.id)}
+            <HeroBody heroId={p.def.id} tier={p.tier} width={96} />
+          {/each}
+        </div>
+      {/if}
 
       {#if tabUnlocked($game, "protocolos")}
       <div class="frag-block" class:full={atDossieCap($game)}>
@@ -501,6 +522,13 @@
   .boss-current {
     font-size: 0.66rem;
     color: var(--text-faint);
+  }
+
+  .poster-block {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4rem;
   }
 
   .frag-block {
