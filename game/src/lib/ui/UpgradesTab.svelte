@@ -1,24 +1,80 @@
 <script lang="ts">
-  import { game, production, buyUpgrade, availableUpgrades, upgradeContext } from "../game/state";
+  import { game, production, buyUpgrade, availableUpgrades, upgradeContext, heroVisualTier } from "../game/state";
   import { UPGRADES, UPGRADES_BY_ID } from "../game/upgrades";
+  import { HEROES } from "../game/heroes";
+  import { BODIES } from "../game/bodies";
   import { formatNumber, timeToAfford } from "../game/format";
-
-  const KIND_LABEL: Record<string, string> = {
-    global: "Agência",
-    hero: "Herói",
-  };
+  import HeroBody from "./HeroBody.svelte";
 
   let ctx = $derived(upgradeContext($game));
-  let available = $derived(availableUpgrades($game));
-  let owned = $derived($game.upgrades.map((id) => UPGRADES_BY_ID[id]).filter(Boolean));
+  // The hero-specific half lives in its own section below, right next to the
+  // character it changes — mixed into this cost-sorted list, buying one would
+  // update a portrait the player can't even see at the same time.
+  let available = $derived(availableUpgrades($game).filter((u) => u.kind === "global"));
+  let owned = $derived(
+    $game.upgrades.map((id) => UPGRADES_BY_ID[id]).filter((u): u is NonNullable<typeof u> => !!u && u.kind === "global"),
+  );
   let locked = $derived(
-    UPGRADES.filter((u) => !$game.upgrades.includes(u.id) && !u.unlocked(ctx)).sort((a, b) => a.cost - b.cost),
+    UPGRADES.filter((u) => u.kind === "global" && !$game.upgrades.includes(u.id) && !u.unlocked(ctx)).sort(
+      (a, b) => a.cost - b.cost,
+    ),
+  );
+
+  let heroCards = $derived(
+    HEROES.filter((h) => ($game.levels[h.id] ?? 0) > 0 && BODIES[h.id]).map((h) => {
+      const defs = [UPGRADES_BY_ID[`hero-${h.id}-a`], UPGRADES_BY_ID[`hero-${h.id}-b`]].filter(
+        (u): u is NonNullable<typeof u> => !!u,
+      );
+      return {
+        def: h,
+        tier: heroVisualTier($game, h.id),
+        upgrades: defs.map((u) => ({
+          def: u,
+          owned: $game.upgrades.includes(u.id),
+          unlocked: u.unlocked(ctx),
+          affordable: $game.verba.gte(u.cost),
+        })),
+      };
+    }),
   );
 </script>
 
 <div class="wrap">
+  {#if heroCards.length > 0}
+    <section>
+      <h3 class="label section-title">Heróis</h3>
+      <div class="hero-grid">
+        {#each heroCards as h (h.def.id)}
+          <div class="hero-up-card">
+            <HeroBody heroId={h.def.id} tier={h.tier} width={92} />
+            <span class="hero-up-name">{h.def.name}</span>
+            <div class="hero-up-list">
+              {#each h.upgrades as u (u.def.id)}
+                {#if u.owned}
+                  <div class="hu-row owned">
+                    <span class="hu-check">✓</span>
+                    <span class="hu-text">{u.def.name.split(": ")[1] ?? u.def.name}</span>
+                  </div>
+                {:else if u.unlocked}
+                  <button class="hu-row buyable" disabled={!u.affordable} onclick={() => buyUpgrade(u.def.id)}>
+                    <span class="hu-text">{u.def.name.split(": ")[1] ?? u.def.name}</span>
+                    <span class="hu-cost mono">{formatNumber(u.def.cost, 0)}</span>
+                  </button>
+                {:else}
+                  <div class="hu-row locked">
+                    <span class="hu-text">{u.def.reqText}</span>
+                  </div>
+                {/if}
+              {/each}
+            </div>
+          </div>
+        {/each}
+      </div>
+    </section>
+  {/if}
+
   <section>
-    <h3 class="label section-title">Disponíveis</h3>
+    <h3 class="label section-title">Agência</h3>
     {#if available.length === 0}
       <p class="empty-note">Nada novo por enquanto. Treine o efetivo e enfrente ameaças maiores para liberar novas melhorias.</p>
     {:else}
@@ -31,7 +87,6 @@
             <div class="up-body">
               <div class="up-name">{u.name}</div>
               <div class="up-desc">{u.desc}</div>
-              <span class="chip chip-muted">{KIND_LABEL[u.kind]}</span>
             </div>
             <button class="up-buy" disabled={!affordable} onclick={() => buyUpgrade(u.id)}>
               <span class="mono cost">{formatNumber(u.cost, 0)}</span>
@@ -90,6 +145,82 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 0.6rem;
+  }
+
+  .hero-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 0.7rem;
+  }
+  .hero-up-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: 0.8rem 0.6rem;
+  }
+  .hero-up-name {
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.78rem;
+    text-align: center;
+  }
+  .hero-up-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    width: 100%;
+  }
+  .hu-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
+    border-radius: 6px;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.66rem;
+    text-align: left;
+    width: 100%;
+  }
+  .hu-row.locked {
+    background: transparent;
+    border: 1px dashed var(--rule);
+    color: var(--text-faint);
+    font-style: italic;
+    justify-content: center;
+  }
+  .hu-row.owned {
+    background: color-mix(in srgb, var(--gain-green) 14%, var(--panel));
+    border: 1px solid var(--gain-green-ink);
+    color: var(--gain-green);
+  }
+  .hu-check {
+    flex-shrink: 0;
+  }
+  .hu-row.buyable {
+    background: var(--panel-raised);
+    border: 1px solid var(--power-gold);
+    color: var(--paper);
+  }
+  .hu-row.buyable:disabled {
+    border-color: var(--rule);
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  .hu-text {
+    flex: 1;
+    min-width: 0;
+  }
+  .hu-cost {
+    flex-shrink: 0;
+    color: var(--power-gold);
+  }
+  .hu-row.buyable:disabled .hu-cost {
+    color: var(--text-faint);
   }
 
   .up-card {
