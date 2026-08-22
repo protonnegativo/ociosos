@@ -13,9 +13,10 @@
     type BuyAmount,
   } from "../game/state";
   import { activeBuff } from "../game/state";
-  import { DEFAULT_DEPARTMENT } from "../game/departments";
+  import { DEFAULT_DEPARTMENT, DEPARTMENTS_BY_ID } from "../game/departments";
   import { HEROES, FACTION_COLOR, ROLE_ICON, milestoneMultiplier, nextMilestone } from "../game/heroes";
   import DepartmentBoard from "./DepartmentBoard.svelte";
+  import HeroPortrait from "./HeroPortrait.svelte";
   import { formatNumber, formatRate, timeToAfford } from "../game/format";
 
   let { buyAmount }: { buyAmount: BuyAmount } = $props();
@@ -67,8 +68,36 @@
     }),
   );
 
+  function statusOf(heroId: string): string {
+    if (isDeployed($game, heroId)) return "🎯 em campo";
+    const deptId = assignedDepartment($game, heroId);
+    const dept = DEPARTMENTS_BY_ID[deptId];
+    return dept ? `${dept.emoji} ${dept.name}` : "🚔 Patrulha";
+  }
 
+  let roster = $derived(
+    HEROES.filter((h) => ($game.levels[h.id] ?? 0) > 0).map((h) => ({
+      def: h,
+      level: $game.levels[h.id] ?? 0,
+      status: statusOf(h.id),
+    })),
+  );
 </script>
+
+{#if roster.length > 0}
+  <section class="hq">
+    <h3 class="hq-head label">Quartel-General — {roster.length} no efetivo</h3>
+    <div class="hq-lineup">
+      {#each roster as r (r.def.id)}
+        <div class="hq-card">
+          <HeroPortrait def={r.def} level={r.level} size={64} showLevel />
+          <span class="hq-name">{r.def.name}</span>
+          <span class="hq-status mono">{r.status}</span>
+        </div>
+      {/each}
+    </div>
+  </section>
+{/if}
 
 <DepartmentBoard />
 
@@ -82,15 +111,7 @@
       class:expanded={expanded.has(row.def.id)}
       style="--faction-color: {FACTION_COLOR[row.def.faction]}"
     >
-      <div
-        class="avatar"
-        class:dim={!row.recruited}
-        style="background: color-mix(in srgb, {FACTION_COLOR[row.def.faction]} 35%, var(--panel-raised)); border-color: {FACTION_COLOR[
-          row.def.faction
-        ]}"
-      >
-        {row.def.emoji}
-      </div>
+      <HeroPortrait def={row.def} level={row.level} size={48} />
 
       <div class="hero-info">
         <div class="hero-top">
@@ -171,21 +192,38 @@
     border-left-color: var(--faction-color);
   }
 
-  .avatar {
-    flex-shrink: 0;
-    width: 3rem;
-    height: 3rem;
-    border-radius: 50%;
-    border: 2px solid;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    line-height: 1;
+  .hq {
+    margin-bottom: 1.2rem;
   }
-  .avatar.dim {
-    filter: grayscale(0.7);
-    opacity: 0.6;
+  .hq-head {
+    font-size: 0.75rem;
+    color: var(--text-faint);
+    margin: 0 0 0.6rem;
+  }
+  .hq-lineup {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.9rem;
+  }
+  .hq-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    width: 5.4rem;
+  }
+  .hq-name {
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.66rem;
+    text-align: center;
+    line-height: 1.15;
+  }
+  .hq-status {
+    font-size: 0.58rem;
+    color: var(--text-faint);
+    text-align: center;
   }
 
   .hero-info {
