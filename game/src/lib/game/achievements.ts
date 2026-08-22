@@ -33,7 +33,7 @@ function highestLevel(levels: Record<string, number>): number {
   return Math.max(0, ...HEROES.map((h) => levels[h.id] ?? 0));
 }
 
-const FAMA_TIERS: { id: string; name: string; amount: number; emoji: string }[] = [
+const VERBA_TIERS: { id: string; name: string; amount: number; emoji: string }[] = [
   { id: "fama-1", name: "Nota de Rodapé", amount: 1_000, emoji: "📄" },
   { id: "fama-2", name: "Capa de Fanzine", amount: 1_000_000, emoji: "📰" },
   { id: "fama-3", name: "Presença Constante", amount: 1_000_000_000, emoji: "📺" },
@@ -49,7 +49,7 @@ const OPS_TIERS: { id: string; name: string; amount: number; emoji: string }[] =
 ];
 
 export const ACHIEVEMENTS: AchievementDef[] = [
-  ...FAMA_TIERS.map((t) => ({
+  ...VERBA_TIERS.map((t) => ({
     id: t.id,
     name: t.name,
     desc: `Acumule ${t.amount.toExponential(0).replace("e+", "e")} de Verba no total.`,

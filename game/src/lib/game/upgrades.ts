@@ -22,8 +22,8 @@ export interface UpgradeDef {
   unlocked: (ctx: UpgradeContext) => boolean;
 }
 
-// Bought with Fama, wiped on every Reboot — these are the *inside a run*
-// power spikes that keep the mid-game from being a flat climb.
+// Bought with Verba, wiped on every Reestruturação — these are the *inside a
+// run* power spikes that keep the mid-game from being a flat climb.
 
 const PATROL_UPGRADES: UpgradeDef[] = [
   {

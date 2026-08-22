@@ -4,7 +4,6 @@
   import { formatNumber, timeToAfford } from "../game/format";
 
   const KIND_LABEL: Record<string, string> = {
-    click: "Despacho",
     global: "Agência",
     hero: "Herói",
   };

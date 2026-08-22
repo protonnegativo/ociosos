@@ -25,17 +25,17 @@
 </script>
 
 <div class="wrap">
-  <section class="reboot-box" class:ready>
-    <div class="reboot-head">
+  <section class="restructure-box" class:ready>
+    <div class="restructure-head">
       <span class="label">Reestruturar a agência</span>
       <span class="dossie-count mono">🗂️ {formatNumber($game.dossies, 0)} dossiês</span>
     </div>
-    <p class="reboot-copy">
+    <p class="restructure-copy">
       Reestruturar dissolve a administração atual: zera a Verba, dispensa o efetivo, cancela as melhorias e
       devolve a agência ao nível de ameaça 1. Em troca, tudo que você movimentou vira Dossiês — a memória
       institucional que os Protocolos abaixo transformam em vantagem permanente.
     </p>
-    <div class="reboot-progress">
+    <div class="restructure-progress">
       <div class="rp-bar">
         <div class="rp-fill" style="width: {progress}%"></div>
       </div>
@@ -43,7 +43,7 @@
         {#if capped}Arquivo cheio — o excedente desta administração se perde{:else}Rumo ao próximo Dossiê{/if}
       </span>
     </div>
-    <div class="reboot-action">
+    <div class="restructure-action">
       <div class="gain">
         <span class="gain-num mono">+{formatNumber(pending, 0)}<span class="gain-cap">/{cap.toLocaleString("pt-BR")}</span></span>
         <span class="gain-label label">dossiês ao reestruturar</span>
@@ -52,7 +52,7 @@
         <div class="confirm-row">
           <button class="btn-ghost" onclick={() => (confirming = false)}>Cancelar</button>
           <button
-            class="reboot-btn"
+            class="restructure-btn"
             onclick={() => {
               doRestructure();
               confirming = false;
@@ -60,7 +60,7 @@
           >
         </div>
       {:else}
-        <button class="reboot-btn" disabled={!ready} onclick={() => (confirming = true)}>
+        <button class="restructure-btn" disabled={!ready} onclick={() => (confirming = true)}>
           Reestruturar agência
         </button>
       {/if}
@@ -102,18 +102,18 @@
         {@const maxed = level >= r.maxLevel}
         {@const cost = protocolCost(r, level)}
         {@const affordable = !maxed && $game.dossies.gte(cost)}
-        <div class="ret-card" class:affordable class:maxed>
-          <div class="ret-emoji">{r.emoji}</div>
-          <div class="ret-body">
-            <div class="ret-top">
-              <span class="ret-name">{r.name}</span>
+        <div class="proto-card" class:affordable class:maxed>
+          <div class="proto-emoji">{r.emoji}</div>
+          <div class="proto-body">
+            <div class="proto-top">
+              <span class="proto-name">{r.name}</span>
               <span class="chip chip-cyan">
                 {maxed ? "MÁX" : `NV ${level}`}
               </span>
             </div>
-            <div class="ret-desc">{r.desc(level)}</div>
+            <div class="proto-desc">{r.desc(level)}</div>
           </div>
-          <button class="ret-buy" disabled={!affordable} onclick={() => buyProtocol(r.id)}>
+          <button class="proto-buy" disabled={!affordable} onclick={() => buyProtocol(r.id)}>
             {#if maxed}
               <span class="label">Completo</span>
             {:else}
@@ -138,24 +138,24 @@
     margin: 0 0 0.6rem;
   }
 
-  .reboot-box {
+  .restructure-box {
     background: var(--panel);
     border: 1px solid var(--rule);
     border-radius: 12px;
     padding: 1rem 1.1rem;
   }
-  .reboot-box.ready {
+  .restructure-box.ready {
     border-color: var(--fragment-cyan);
     box-shadow: 0 0 0 1px color-mix(in srgb, var(--fragment-cyan) 40%, transparent);
   }
-  .reboot-head {
+  .restructure-head {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 0.6rem;
     margin-bottom: 0.5rem;
   }
-  .reboot-head .label {
+  .restructure-head .label {
     font-size: 0.75rem;
     color: var(--fragment-cyan);
   }
@@ -163,13 +163,13 @@
     font-size: 0.82rem;
     color: var(--fragment-cyan);
   }
-  .reboot-copy {
+  .restructure-copy {
     font-size: 0.82rem;
     color: var(--text-soft);
     margin: 0 0 0.9rem;
     max-width: 62ch;
   }
-  .reboot-action {
+  .restructure-action {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -195,7 +195,7 @@
     font-size: 0.95rem;
     opacity: 0.55;
   }
-  .reboot-progress {
+  .restructure-progress {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
@@ -221,7 +221,7 @@
     display: flex;
     gap: 0.5rem;
   }
-  .reboot-btn {
+  .restructure-btn {
     background: var(--fragment-cyan);
     color: #06201e;
     border: none;
@@ -233,12 +233,12 @@
     letter-spacing: 0.06em;
     font-size: 0.82rem;
   }
-  .reboot-btn:disabled {
+  .restructure-btn:disabled {
     background: var(--panel-raised);
     color: var(--text-faint);
     cursor: not-allowed;
   }
-  .reboot-btn:not(:disabled):hover {
+  .restructure-btn:not(:disabled):hover {
     filter: brightness(1.1);
   }
 
@@ -298,7 +298,7 @@
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 0.6rem;
   }
-  .ret-card {
+  .proto-card {
     display: flex;
     align-items: center;
     gap: 0.7rem;
@@ -307,13 +307,13 @@
     border-radius: 10px;
     padding: 0.6rem 0.75rem;
   }
-  .ret-card.affordable {
+  .proto-card.affordable {
     border-color: var(--fragment-cyan);
   }
-  .ret-card.maxed {
+  .proto-card.maxed {
     opacity: 0.7;
   }
-  .ret-emoji {
+  .proto-emoji {
     flex-shrink: 0;
     font-size: 1.4rem;
     width: 2.2rem;
@@ -324,28 +324,28 @@
     background: var(--panel-raised);
     border-radius: 8px;
   }
-  .ret-body {
+  .proto-body {
     flex: 1;
     min-width: 0;
   }
-  .ret-top {
+  .proto-top {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
     gap: 0.5rem;
   }
-  .ret-name {
+  .proto-name {
     font-family: "Barlow Condensed", sans-serif;
     font-weight: 700;
     text-transform: uppercase;
     font-size: 0.85rem;
   }
-  .ret-desc {
+  .proto-desc {
     font-size: 0.72rem;
     color: var(--text-soft);
     margin-top: 0.15rem;
   }
-  .ret-buy {
+  .proto-buy {
     flex-shrink: 0;
     background: var(--panel-raised);
     border: 1px solid var(--rule);
@@ -354,22 +354,22 @@
     min-width: 84px;
     color: var(--paper);
   }
-  .ret-buy:not(:disabled) {
+  .proto-buy:not(:disabled) {
     background: color-mix(in srgb, var(--fragment-cyan) 20%, var(--panel-raised));
     border-color: var(--fragment-cyan);
   }
-  .ret-buy:disabled {
+  .proto-buy:disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }
-  .ret-buy .cost {
+  .proto-buy .cost {
     font-size: 0.76rem;
     color: var(--fragment-cyan);
   }
-  .ret-buy:disabled .cost {
+  .proto-buy:disabled .cost {
     color: var(--text-faint);
   }
-  .ret-buy .label {
+  .proto-buy .label {
     font-size: 0.68rem;
     color: var(--text-faint);
   }

@@ -366,7 +366,7 @@
 
 <aside class="debug-panel" class:open={debugOpen}>
   <div class="debug-title label">Painel de debug</div>
-  <p class="debug-current mono">Fama: {formatNumber($game.verba)}</p>
+  <p class="debug-current mono">Verba: {formatNumber($game.verba)}</p>
   <label class="debug-label label" for="dbg">Valor</label>
   <input id="dbg" class="debug-input mono" type="text" inputmode="decimal" bind:value={debugValue} />
   <div class="debug-actions">

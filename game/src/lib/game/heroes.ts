@@ -14,7 +14,7 @@ export interface HeroDef {
   recruitCost: number;
   /** Per-level cost growth — same exponential curve as the design doc's tier table. */
   costRate: number;
-  /** Fama/s this hero adds per level owned. */
+  /** Verba/s this hero adds per level owned. */
   baseProduction: number;
 }
 
