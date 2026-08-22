@@ -67,11 +67,54 @@
   function release(heroId: string) {
     assignHero(heroId, DEFAULT_DEPARTMENT);
   }
+
+  // Drag is an addition, never the only path: it is undiscoverable on its own
+  // and does not exist on touch, so every action here also works by clicking.
+  let dragging = $state<string | null>(null);
+  let hoverDept = $state<string | null>(null);
+
+  function canDrop(deptId: string, heroId: string | null): boolean {
+    if (!heroId) return false;
+    const col = columns.find((c) => c.def.id === deptId);
+    if (!col || !col.unlocked) return false;
+    if (col.members.includes(heroId)) return false;
+    return col.def.unlimited || col.members.length < col.slots;
+  }
+
+  function startDrag(e: DragEvent, heroId: string) {
+    dragging = heroId;
+    e.dataTransfer?.setData("text/plain", heroId);
+    if (e.dataTransfer) e.dataTransfer.effectAllowed = "move";
+  }
+
+  function overDept(e: DragEvent, deptId: string) {
+    if (!canDrop(deptId, dragging)) return;
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+    hoverDept = deptId;
+  }
+
+  function dropOn(e: DragEvent, deptId: string) {
+    e.preventDefault();
+    const heroId = dragging ?? e.dataTransfer?.getData("text/plain") ?? null;
+    if (heroId && canDrop(deptId, heroId)) assignHero(heroId, deptId);
+    dragging = null;
+    hoverDept = null;
+  }
 </script>
 
 <div class="board">
   {#each columns as col (col.def.id)}
-    <section class="dept" class:locked={!col.unlocked} style="--accent: {col.def.yields === 'verba' ? 'var(--power-gold)' : col.def.yields === 'intel' ? 'var(--sky-blue)' : 'var(--gain-green)'}">
+    <section
+      class="dept"
+      class:locked={!col.unlocked}
+      class:drop-ok={dragging && hoverDept === col.def.id}
+      class:drop-no={dragging && !canDrop(col.def.id, dragging) && !col.members.includes(dragging)}
+      ondragover={(e) => overDept(e, col.def.id)}
+      ondragleave={() => (hoverDept = hoverDept === col.def.id ? null : hoverDept)}
+      ondrop={(e) => dropOn(e, col.def.id)}
+      role="group"
+      style="--accent: {col.def.yields === 'verba' ? 'var(--power-gold)' : col.def.yields === 'intel' ? 'var(--sky-blue)' : 'var(--gain-green)'}">
       <header class="dept-head">
         <span class="dept-emoji">{col.def.emoji}</span>
         <span class="dept-name">{col.def.name}</span>
@@ -85,13 +128,25 @@
       {:else}
         <p class="dept-desc">{col.def.desc}</p>
         <div class="dept-total mono">▲ {totalOutput(col.def, col.members)}</div>
-        {#if !col.def.unlimited && col.members.length > 0}
-          <p class="dept-tip">✕ devolve o herói à Patrulha</p>
+        {#if col.members.length > 0}
+          <p class="dept-tip">
+            arraste para mover{#if !col.def.unlimited} · ✕ devolve à Patrulha{/if}
+          </p>
         {/if}
 
         <ul class="slots">
           {#each col.members as id (id)}
-            <li class="slot filled">
+            <li
+              class="slot filled"
+              class:being-dragged={dragging === id}
+              draggable="true"
+              ondragstart={(e) => startDrag(e, id)}
+              ondragend={() => {
+                dragging = null;
+                hoverDept = null;
+              }}
+            >
+              <span class="grip" aria-hidden="true">⠿</span>
               <span class="slot-emoji">{HEROES_BY_ID[id].emoji}</span>
               <span class="slot-name">{HEROES_BY_ID[id].name}</span>
               <span class="slot-rate mono">{output(col.def, id)}</span>
@@ -162,6 +217,14 @@
   .dept.locked {
     opacity: 0.5;
   }
+  .dept.drop-ok {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 14%, var(--panel));
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+  .dept.drop-no {
+    opacity: 0.45;
+  }
 
   .dept-head {
     display: flex;
@@ -226,6 +289,19 @@
   .slot.filled {
     background: var(--panel-raised);
     border: 1px solid var(--rule);
+    cursor: grab;
+  }
+  .slot.filled:active {
+    cursor: grabbing;
+  }
+  .slot.being-dragged {
+    opacity: 0.4;
+  }
+  .grip {
+    flex-shrink: 0;
+    color: var(--text-faint);
+    font-size: 0.8rem;
+    line-height: 1;
   }
   .slot.empty {
     flex-direction: column;
