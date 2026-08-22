@@ -32,6 +32,7 @@
     debugAddVerba,
     debugAddDossies,
     debugAddSupport,
+    resetSave,
     debugSpawnAlerta,
     type BuyAmount,
   } from "./lib/game/state";
@@ -148,6 +149,13 @@
   // Debug drawer
   let debugOpen = $state(false);
   let debugValue = $state("1000");
+  let confirmingReset = $state(false);
+
+  function doReset() {
+    resetSave();
+    confirmingReset = false;
+    tab = "efetivo";
+  }
 </script>
 
 <div class="page">
@@ -1071,6 +1079,14 @@
   }
   .debug-btn.wide {
     width: 100%;
+  }
+  .debug-btn.danger {
+    background: #2e1414;
+    border-color: #6b2b2b;
+    color: #ffb4b4;
+  }
+  .debug-btn.danger:hover {
+    border-color: #ff6a52;
   }
   .debug-hint {
     font-size: 0.64rem;
