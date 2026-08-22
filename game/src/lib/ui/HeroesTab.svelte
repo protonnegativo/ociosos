@@ -10,6 +10,9 @@
     purchaseImpact,
     isDeployed,
     assignedDepartment,
+    protocolLevel,
+    heroAutoLocked,
+    toggleHeroAutoLock,
     type BuyAmount,
   } from "../game/state";
   import { activeBuff } from "../game/state";
@@ -28,6 +31,8 @@
     else next.add(id);
     expanded = next;
   }
+
+  let automationUnlocked = $derived(protocolLevel($game, "autonomo") > 0);
 
   let rows = $derived(
     HEROES.map((def) => {
@@ -64,6 +69,7 @@
         wait: timeToAfford(cost, $game.verba, $production),
         buyGain,
         onPatrol,
+        locked: heroAutoLocked($game, def.id),
       };
     }),
   );
@@ -87,6 +93,19 @@
       <div class="hero-info">
         <div class="hero-top">
           <span class="hero-name">{row.def.name}</span>
+          {#if automationUnlocked && row.recruited}
+            <button
+              type="button"
+              class="lock-toggle"
+              class:active={row.locked}
+              title={row.locked
+                ? "Reservado — treino e operações automáticas não mexem nele"
+                : "Reservar este herói (tirar da automação)"}
+              onclick={() => toggleHeroAutoLock(row.def.id)}
+            >
+              {row.locked ? "🔒" : "🔓"}
+            </button>
+          {/if}
         </div>
 
         <div class="hero-meta">
@@ -172,6 +191,21 @@
     justify-content: space-between;
     align-items: baseline;
     gap: 0.5rem;
+  }
+  .lock-toggle {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 0.82rem;
+    line-height: 1;
+    opacity: 0.5;
+  }
+  .lock-toggle:hover {
+    opacity: 0.85;
+  }
+  .lock-toggle.active {
+    opacity: 1;
   }
   .hero-name {
     font-family: "Barlow Condensed", sans-serif;

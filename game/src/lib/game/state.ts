@@ -93,6 +93,8 @@ export interface GameState {
   autoSpendFraction: number;
   /** Comando Autônomo nível 2 — launches field operations on its own. */
   autoOps: boolean;
+  /** Hero ids the player has reserved — auto-train and auto-ops both leave them alone. */
+  autoLocked: string[];
 
   lastTick: number;
 }
@@ -168,6 +170,7 @@ function freshState(): GameState {
     autoTrain: false,
     autoSpendFraction: 0.5,
     autoOps: false,
+    autoLocked: [],
     lastTick: Date.now(),
   };
 }
@@ -203,6 +206,7 @@ function serialize(s: GameState): string {
     autoTrain: s.autoTrain,
     autoSpendFraction: s.autoSpendFraction,
     autoOps: s.autoOps,
+    autoLocked: s.autoLocked,
     lastTick: Date.now(),
   });
 }
@@ -281,6 +285,7 @@ function deserialize(raw: string): GameState {
     autoTrain: !!p.autoTrain,
     autoSpendFraction: typeof p.autoSpendFraction === "number" ? p.autoSpendFraction : 0.5,
     autoOps: !!p.autoOps,
+    autoLocked: Array.isArray(p.autoLocked) ? p.autoLocked.filter((h: unknown) => typeof h === "string") : [],
     lastTick: typeof p.lastTick === "number" ? p.lastTick : Date.now(),
   };
 }
@@ -762,6 +767,18 @@ export function setAutoOps(on: boolean): void {
   game.update((s) => ({ ...s, autoOps: on }));
 }
 
+export function heroAutoLocked(s: GameState, heroId: string): boolean {
+  return s.autoLocked.includes(heroId);
+}
+
+/** Reserved heroes: auto-train and auto-ops both skip them, no matter how good the numbers look. */
+export function toggleHeroAutoLock(heroId: string): void {
+  game.update((s) => ({
+    ...s,
+    autoLocked: s.autoLocked.includes(heroId) ? s.autoLocked.filter((id) => id !== heroId) : [...s.autoLocked, heroId],
+  }));
+}
+
 // --- Field operations -----------------------------------------------------
 
 export function opAvailable(s: GameState, def: OperationDef, now = Date.now()): boolean {
@@ -831,7 +848,9 @@ export function deployOperation(defId: string, heroIds: string[]): boolean {
  * auto-ops raiding them would be feeding itself from its own supply line.
  */
 function autoOpsCandidates(s: GameState): HeroDef[] {
-  return availableHeroes(s).filter((h) => assignedDepartment(s, h.id) === DEFAULT_DEPARTMENT);
+  return availableHeroes(s).filter(
+    (h) => assignedDepartment(s, h.id) === DEFAULT_DEPARTMENT && !s.autoLocked.includes(h.id),
+  );
 }
 
 /** Best squad this operation can field from patrol right now, or null if there aren't enough free hands. */
@@ -942,6 +961,7 @@ function bestAutoBuy(s: GameState, buff: ActiveBuff | null): string | null {
   // to clear the next threat instead of being permanently broke.
   const budget = s.verba.times(s.autoSpendFraction);
   for (const h of HEROES) {
+    if (s.autoLocked.includes(h.id)) continue;
     const level = s.levels[h.id] ?? 0;
     const cost = heroCost(h, level);
     if (budget.lt(cost)) continue;

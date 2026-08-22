@@ -115,6 +115,12 @@
           compra libera o despacho automático de operações.
         </p>
       {/if}
+
+      <div class="auto-sep"></div>
+      <p class="auto-hint">
+        Quer manter algum herói fora disso? Na aba Efetivo, o cadeado ao lado do nome de cada herói alistado
+        reserva ele — treino e operações automáticas passam longe.
+      </p>
     </section>
   {/if}
 
@@ -279,6 +285,11 @@
   .auto-copy.muted {
     font-style: italic;
     color: var(--text-faint);
+  }
+  .auto-hint {
+    font-size: 0.68rem;
+    color: var(--text-faint);
+    margin: 0;
   }
   .auto-head .label.muted {
     color: var(--text-faint);
