@@ -64,9 +64,9 @@ export const DEFAULT_DEPARTMENT = "patrulha";
  * would stop being a constraint.
  */
 export function intelRate(level: number): number {
-  return 0.05 * (1 + level / 25);
+  return 0.05 * (1 + level / 5);
 }
 
 export function equipRate(level: number): number {
-  return 0.02 * (1 + level / 25);
+  return 0.02 * (1 + level / 5);
 }

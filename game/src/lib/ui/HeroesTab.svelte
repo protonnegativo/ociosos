@@ -10,9 +10,11 @@
     factionSynergy,
     purchaseImpact,
     isDeployed,
+    assignedDepartment,
     type BuyAmount,
   } from "../game/state";
   import { activeBuff } from "../game/state";
+  import { DEFAULT_DEPARTMENT } from "../game/departments";
   import { HEROES, FACTION_COLOR, ROLE_ICON, milestoneMultiplier, nextMilestone } from "../game/heroes";
   import DepartmentBoard from "./DepartmentBoard.svelte";
   import { formatNumber, formatRate, timeToAfford } from "../game/format";
@@ -34,7 +36,14 @@
       const shown = Math.max(1, n);
       const cost = n > 0 ? heroCostBulk(def, level, n) : heroCost(def, level);
 
-      const buyGain = purchaseImpact($game, def, shown, $activeBuff, $production);
+      // Measured as if the hero were on patrol. Posted to a department they add
+      // no Verba, so the raw impact reads +0 — true but useless, since what the
+      // player is deciding is how strong this hero gets.
+      const onPatrol = assignedDepartment($game, def.id) === DEFAULT_DEPARTMENT && !isDeployed($game, def.id);
+      const patrolState = onPatrol
+        ? $game
+        : { ...$game, assignments: { ...$game.assignments, [def.id]: DEFAULT_DEPARTMENT }, activeOps: [] };
+      const buyGain = purchaseImpact(patrolState, def, shown, $activeBuff);
 
       return {
         def,
@@ -51,6 +60,7 @@
         synergy: factionSynergy($game, def.faction),
         wait: timeToAfford(cost, $game.verba, $production),
         buyGain,
+        onPatrol,
       };
     }),
   );
@@ -127,6 +137,7 @@
         </span>
         <span class="mono cost">{row.cost.lte(0) ? "grátis" : formatNumber(row.cost, 0)}</span>
         <span class="mono gain">↗ +{formatRate(row.buyGain)}</span>
+        {#if !row.onPatrol}<span class="mono gain-note">se em patrulha</span>{/if}
         {#if !row.affordable && row.wait}
           <span class="mono wait">em {row.wait}</span>
         {/if}
@@ -315,6 +326,10 @@
   }
   .buy-btn:disabled .gain {
     color: color-mix(in srgb, var(--gain-green) 55%, var(--text-faint));
+  }
+  .buy-btn .gain-note {
+    font-size: 0.54rem;
+    color: var(--text-faint);
   }
   .buy-btn .wait {
     font-size: 0.6rem;
