@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { HeroDef } from "../game/heroes";
   import { FACTION_COLOR } from "../game/heroes";
+  import HeroFace from "./HeroFace.svelte";
 
   let {
     def,
@@ -9,15 +10,6 @@
     showLevel = false,
   }: { def: HeroDef; level?: number; size?: number; showLevel?: boolean } = $props();
 
-  const ROLE_SHAPE: Record<string, string> = {
-    Dano: "star",
-    Tanque: "hex",
-    Suporte: "cross",
-    Utilidade: "diamond",
-    Controle: "rings",
-  };
-
-  let shape = $derived(ROLE_SHAPE[def.role] ?? "diamond");
   let dim = $derived(level <= 0);
 </script>
 
@@ -28,12 +20,7 @@
   title="{def.name} · {def.role} · {def.faction}"
 >
   <div class="ring"></div>
-  {#if shape === "rings"}
-    <div class="aura orbit"></div>
-  {:else}
-    <div class="aura shape-{shape}"></div>
-  {/if}
-  <span class="emoji" style="font-size: {size * 0.5}px">{def.emoji}</span>
+  <div class="face"><HeroFace heroId={def.id} size={size * 0.86} /></div>
   {#if showLevel && level > 0}<span class="level mono">{level}</span>{/if}
 </div>
 
@@ -47,7 +34,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--faction) 38%, var(--panel-raised)), var(--panel-raised) 75%);
+    background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--faction) 30%, var(--panel-raised)), var(--panel-raised) 75%);
     overflow: hidden;
   }
   .portrait.dim {
@@ -61,6 +48,7 @@
     border-radius: 50%;
     border: 2px solid color-mix(in srgb, var(--faction) 55%, var(--rule));
     pointer-events: none;
+    z-index: 2;
   }
   .rarity-4 .ring {
     border-color: color-mix(in srgb, var(--power-gold) 55%, var(--faction));
@@ -87,87 +75,19 @@
     }
   }
 
-  .aura {
-    position: absolute;
-    width: 74%;
-    height: 74%;
-    background: color-mix(in srgb, var(--faction) 55%, transparent);
-    opacity: 0.4;
-  }
-  .aura.shape-star {
-    clip-path: polygon(
-      50% 0%,
-      61% 35%,
-      98% 35%,
-      68% 57%,
-      79% 91%,
-      50% 70%,
-      21% 91%,
-      32% 57%,
-      2% 35%,
-      39% 35%
-    );
-  }
-  .aura.shape-hex {
-    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-  }
-  .aura.shape-cross {
-    clip-path: polygon(
-      35% 0%,
-      65% 0%,
-      65% 35%,
-      100% 35%,
-      100% 65%,
-      65% 65%,
-      65% 100%,
-      35% 100%,
-      35% 65%,
-      0% 65%,
-      0% 35%,
-      35% 35%
-    );
-  }
-  .aura.shape-diamond {
-    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
-  }
-
-  .aura.orbit {
-    width: 92%;
-    height: 92%;
-    border-radius: 50%;
-    background: conic-gradient(
-      from 0deg,
-      transparent 0deg,
-      color-mix(in srgb, var(--faction) 65%, transparent) 90deg,
-      transparent 180deg,
-      color-mix(in srgb, var(--faction) 65%, transparent) 270deg,
-      transparent 360deg
-    );
-    animation: orbit-spin 6s linear infinite;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .aura.orbit {
-      animation: none;
-    }
-  }
-  @keyframes orbit-spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
-  .emoji {
+  .face {
     position: relative;
     z-index: 1;
-    line-height: 1;
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .level {
     position: absolute;
     bottom: -2px;
     right: -2px;
-    z-index: 2;
+    z-index: 3;
     background: var(--power-gold);
     color: var(--ink);
     font-size: 0.6rem;
