@@ -108,6 +108,8 @@
 
             {#if cd > 0}
               <div class="op-note mono">Em recomposição — disponível em {formatDuration(cd)}</div>
+            {:else if !ready}
+              <div class="op-note mono">Equipe já em campo nesta operação</div>
             {:else if isPlanning}
               <div class="picker">
                 <div class="picker-head label">

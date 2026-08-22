@@ -344,23 +344,23 @@
 <section id="pitch">
   <p class="eyebrow">01 — O Conceito</p>
   <h2>O pitch e os pilares</h2>
-  <p class="lede">Ociosos é um idle game onde o jogador comanda uma liga de super-heróis paródia que descobriram algo perigoso: dá muito mais lucro ser famoso do que ser útil. O jogador toca a tela para os heróis agirem, mas em minutos contrata estagiários e empresários que assumem o trabalho — sobrando tempo para evoluir o time, montar sinergias entre facções e, quando tudo travar, <em>rebootar</em> o universo pra recomeçar mais forte, como uma nova edição de revista.</p>
+  <p class="lede">Ociosos é um idle game onde o jogador dirige o <strong>E.S.C.U.D.O.</strong> — Escritório Superior de Coordenação de Unidades Descomunais e Ocorrências — a agência que alista heróis paródia e decide onde cada um trabalha. Não existe clique: o jogo inteiro é alocação. Cada herói alistado está sempre fazendo alguma coisa — patrulhando, investigando, na logística, ou destacado numa operação de campo — e o jogador realoca conforme o que falta. Quando a agência trava, ela se <em>reestrutura</em>: zera o progresso da administração atual em troca de vantagem permanente pra próxima.</p>
 
   <div class="pillars">
     <div class="pillar">
       <div class="pnum display">1</div>
-      <h4>Preguiça é o herói</h4>
-      <p>Todo mecanismo de automação é abraçado pela narrativa — os heróis literalmente contratam gente pra não trabalhar. Idle não é desculpa técnica, é a piada central.</p>
+      <h4>Alocar é o jogo inteiro</h4>
+      <p>Sem clique e sem geradores soltos: doze heróis disputando três ou quatro postos bons é a decisão central. Tirar alguém da Patrulha pra Investigação é sempre abrir mão de alguma coisa.</p>
     </div>
     <div class="pillar">
       <div class="pnum display">2</div>
       <h4>Piada visível, número honesto</h4>
-      <p>O humor nunca esconde a economia real. O jogador sempre sabe o que um upgrade faz, mesmo que o nome dele seja ridículo.</p>
+      <p>O humor nunca esconde a economia real. O jogador sempre sabe o que uma melhoria faz, mesmo que o nome dela seja ridículo.</p>
     </div>
     <div class="pillar">
       <div class="pnum display">3</div>
-      <h4>Cada reset é uma HQ nova</h4>
-      <p>Prestígio é reboot narrativo com ganho matemático real — nunca grind vazio repetindo a mesma história.</p>
+      <h4>Cada reestruturação é uma administração nova</h4>
+      <p>Prestígio é reset narrativo com ganho matemático real — nunca grind vazio repetindo o mesmo expediente.</p>
     </div>
     <div class="pillar">
       <div class="pnum display">4</div>
@@ -379,115 +379,130 @@
   <p class="eyebrow">02 — O Mundo</p>
   <h2>A fantasia central</h2>
   <p>O jogo se passa no <strong>Universo 7½</strong> — numerado assim porque nem os próprios heróis tiveram disposição de arredondar. É uma versão do multiverso de super-heróis clássico onde todo mundo ganhou poderes incríveis nos anos 60, 70 e 80 e, décadas depois, está mais interessado em patrocínio, aposentadoria e grupo de WhatsApp da associação de heróis do que em salvar o mundo ativamente.</p>
-  <p>O jogador entra como o novo <strong>editor-chefe</strong> da revista/liga — não um herói, mas quem organiza a bagunça: recruta, escala, motiva (ou suborna) o elenco pra continuar detendo o crime, mesmo que a contragosto. Essa moldura justifica perfeitamente a fantasia idle: o jogador não controla o combate em si, controla a operação por trás dele — exatamente como o gênero pede.</p>
+  <p>O jogador entra como o novo <strong>diretor do E.S.C.U.D.O.</strong> — não um herói, mas quem organiza a bagunça: alista, escala, decide quem investiga o quê e quem vai pra campo, mesmo que o elenco resista a contragosto. Essa moldura (bem Nick Fury, propositalmente) justifica a fantasia idle inteira: o jogador não controla o combate em si, controla a operação por trás dele — exatamente como o gênero pede, e sem precisar de nenhum botão de ação para isso.</p>
   <p>Tom de humor: sátira seca, entregue com cara séria. Os heróis são profissionais desgastados, não palhaços; as piadas nascem do reconhecimento — contratos, crossovers forçados, reboots editoriais, reuniões — e nunca de trocadilho ou pastelão. Nada de humor agressivo ou paródia pessoal de figuras reais.</p>
 </section>
 
 <section id="loop">
   <p class="eyebrow">03 — O Núcleo do Jogo</p>
-  <h2>O loop: do clique ao automático</h2>
-  <p>Esse é o loop mais importante do jogo — praticamente tudo mais existe para alimentá-lo. A transição de clique manual para automação precisa ser <strong>sentida em minutos</strong>, não em horas, e o clique nunca deve desaparecer: ele vira bônus opcional para quem quer interagir.</p>
+  <h2>O loop: alocar, não clicar</h2>
+  <p>A versão original deste documento descrevia um loop de clique virando automação — o padrão do gênero. Na prática, jogando o protótipo, esse clique não fazia o jogador sentir nada: era um botão isolado competindo com uma economia que já rodava sozinha. O loop foi trocado pela estrutura do <strong>Melvor Idle</strong> — uma "skill" ativa por vez, tudo o resto é decisão de alocação — adaptada de um personagem só para doze heróis competindo por poucos postos.</p>
 
   <div class="timeline">
     <div class="tstep">
-      <div class="tt">00:00 – 00:02:00</div>
-      <p><strong>Bater ponto no crime.</strong> O jogador toca a tela e o herói ativo soca um vilão de rua. Cada toque rende <span class="mono">1 Fama</span>. Feedback imediato: número flutuante, tela treme de leve, som seco de impacto.</p>
+      <div class="tt">00:00</div>
+      <p><strong>Zero antes do primeiro alistamento.</strong> Um save novo produz exatamente nada. O primeiro herói é gratuito, e é ele quem liga a economia — sem orçamento base nem clique de bootstrap.</p>
     </div>
     <div class="tstep">
-      <div class="tt">00:02:00 – 00:05:00</div>
-      <p><strong>Primeiro Estagiário.</strong> Com ~15 Fama o jogador contrata o primeiro estagiário, que repete a ação sozinho a 0,1 Fama/s. É caro pro que rende, de propósito: o objetivo é o jogador <em>sentir</em> a virada de manual para automático, não que ela já seja ótima.</p>
+      <div class="tt">00:00 – 00:03:00</div>
+      <p><strong>Patrulha.</strong> Todo herói alistado cai em Patrulha por padrão — posto sem limite de vaga, rende Verba sozinho. É o "ocioso" do título: o herói está ali, produzindo, sem o jogador precisar interagir.</p>
     </div>
     <div class="tstep">
-      <div class="tt">00:05:00 – 00:30:00</div>
-      <p><strong>Escala de estagiários e departamentos.</strong> O jogador compra mais estagiários e desbloqueia o segundo herói (segundo "departamento" de geração). O clique manual já rende menos que 5% da produção total — vira relevante só em <em>Manchetes Quentes</em>, eventos aleatórios que multiplicam o valor de cada toque por 60 segundos.</p>
+      <div class="tt">a partir de 2 heróis</div>
+      <p><strong>Investigação abre.</strong> Só duas vagas. Designar um herói pra lá tira ele da Patrulha (some a Verba dele) em troca de Intel — e sem Intel nenhuma Operação de campo pode ser lançada. Essa é a primeira escolha real do jogo.</p>
     </div>
     <div class="tstep">
-      <div class="tt">a partir de 30–60 min</div>
-      <p><strong>Empresários.</strong> Cada gerador ganha um "Empresário" comprável — um automatizador que reinveste sozinho nesse gerador específico, liberando o jogador para não precisar nem comprar upgrades manualmente. Esse é o ponto em que o jogo se torna verdadeiramente idle: pode ficar minimizado que a economia segue rodando.</p>
+      <div class="tt">a partir da Ameaça 3</div>
+      <p><strong>Logística abre.</strong> Uma vaga, rende Equipamento. Squad que sai pra campo com Equipamento no estoque rende 1,5× no retorno da missão.</p>
+    </div>
+    <div class="tstep">
+      <div class="tt">contínuo</div>
+      <p><strong>Operações de campo.</strong> Com Intel em caixa, o jogador monta um esquadrão de heróis livres e destaca pra uma missão. Quem está em campo não produz em departamento nenhum enquanto a missão roda — o retorno é maior que ficar parado no mesmo tempo, mas a troca é sempre real, nunca grátis.</p>
     </div>
   </div>
 
-  <p>Esse ritmo segue o padrão consolidado do gênero: hook imediato nos primeiros minutos, automação sentida cedo, e o clique manual rebaixado a bônus — nunca removido, porque tocar a tela continua sendo satisfatório mesmo quando irrelevante numericamente.</p>
+  <p>O princípio do gênero continua o mesmo — hook sentido nos primeiros minutos, decisão constante em vez de espera passiva — só que a decisão não é "quando automatizar o clique": é "quem eu tiro da Patrulha agora, e pra onde".</p>
 </section>
 
 <section id="economia">
   <p class="eyebrow">04 — A Economia</p>
   <h2>Moedas e economia</h2>
-  <p>Três moedas, cada uma com um papel específico e nenhuma delas universal — a complexidade é introduzida aos poucos, uma moeda nova só aparece quando a anterior já foi dominada.</p>
+  <p>Uma moeda central, uma de prestígio, e dois recursos de departamento que são deliberadamente <em>não</em>-exponenciais — a complexidade é introduzida aos poucos, uma peça nova só aparece quando a anterior já foi dominada.</p>
 
   <div class="tbl-wrap">
     <table>
       <thead>
-        <tr><th>Moeda</th><th>Papel</th><th>Como se ganha</th><th>Pra que serve</th></tr>
+        <tr><th>Recurso</th><th>Papel</th><th>Como se ganha</th><th>Pra que serve</th></tr>
       </thead>
       <tbody>
         <tr>
-          <td><strong>Fama</strong><br><span class="mono" style="font-size:0.78rem;color:var(--ink-faint)">soft, infinita</span></td>
+          <td><strong>Verba</strong><br><span class="mono" style="font-size:0.78rem;color:var(--ink-faint)">soft, infinita</span></td>
           <td>Moeda do dia a dia</td>
-          <td>Cliques, estagiários, missões</td>
-          <td>Contratar/upar heróis, comprar estagiários e empresários</td>
+          <td>Heróis em Patrulha, Operações concluídas</td>
+          <td>Alistar/treinar heróis, comprar Melhorias</td>
         </tr>
         <tr>
-          <td><strong>Fragmentos de Reboot</strong><br><span class="mono" style="font-size:0.78rem;color:var(--ink-faint)">prestígio</span></td>
+          <td><strong>Dossiês</strong><br><span class="mono" style="font-size:0.78rem;color:var(--ink-faint)">prestígio</span></td>
           <td>Motor de longo prazo</td>
-          <td>Ao "rebootar" o universo (prestígio)</td>
-          <td>Retcons — multiplicadores permanentes que sobrevivem ao reset</td>
+          <td>Ao reestruturar a agência</td>
+          <td>Protocolos — melhorias permanentes que sobrevivem ao reset</td>
         </tr>
         <tr>
-          <td><strong>Selos Raros</strong><br><span class="mono" style="font-size:0.78rem;color:var(--ink-faint)">premium, escassa</span></td>
-          <td>Aceleração e vaidade</td>
-          <td>Conquistas, eventos, compra opcional</td>
-          <td>Edições variante (skins), refresh de energia, cosméticos de time</td>
+          <td><strong>Intel</strong><br><span class="mono" style="font-size:0.78rem;color:var(--ink-faint)">recurso de posto, linear</span></td>
+          <td>Gate de conteúdo</td>
+          <td>Heróis designados à Investigação</td>
+          <td>Custo para lançar qualquer Operação de campo</td>
+        </tr>
+        <tr>
+          <td><strong>Equipamento</strong><br><span class="mono" style="font-size:0.78rem;color:var(--ink-faint)">recurso de posto, linear</span></td>
+          <td>Multiplicador opcional</td>
+          <td>Heróis designados à Logística</td>
+          <td>Squad sai equipada numa Operação: retorno ×1,5</td>
         </tr>
       </tbody>
     </table>
   </div>
 
-  <p>Além dessas três, cada herói tem um recurso próprio de ascensão — <strong>Recortes de Revista</strong> daquele personagem, ganhos ao puxar duplicatas dele em recrutamentos. Recortes fundem-se em evoluções de raridade, garantindo que duplicata nunca seja lixo de inventário.</p>
-
   <div class="callout">
-    <span class="label">Por que não uma quarta moeda</span>
-    <p>Cada camada nova de economia é cara cognitivamente. Três moedas centrais + recurso de ascensão por herói já cobre curto prazo (Fama), longuíssimo prazo (Fragmentos) e vaidade/aceleração (Selos) sem exigir malabarismo mental do jogador.</p>
+    <span class="label">Por que Intel e Equipamento não são exponenciais</span>
+    <p>Se escalassem como Verba, qualquer custo de Operação seria pago em minutos e o recurso pararia de ser uma restrição real. A taxa de cada um cresce só linearmente com o nível do herói no posto (<span class="mono">taxa_base × (1 + nível/5)</span>), e o único jeito de acelerar isso além do nível é um Protocolo dedicado — o gargalo é proposital.</p>
   </div>
+
+  <p>O sistema de <strong>Recortes de Revista</strong> (duplicata de herói virando material de ascensão de raridade) segue como ideia de design, não implementado: hoje cada herói é uma vaga única, sem recrutamento por sorte — o elenco inteiro é fixo desde o início, e o que muda é quem está alistado e onde. Ver seção 06.</p>
 </section>
 
 <section id="matematica">
   <p class="eyebrow">05 — Sob o Capô</p>
   <h2>A matemática da progressão</h2>
 
-  <h3><span class="num">5.1</span>Custo de estagiários e empresários</h3>
-  <p>Custo cresce exponencial, produção cresce linear — essa assimetria é o motor de todo o gênero: garante que qualquer gerador eventualmente "esfria" e empurra o jogador para o próximo tier ou para o reboot.</p>
-  <div class="formula">custo(n) = custo_base <span class="v">×</span> taxa^n
-produção_total = produção_base <span class="v">×</span> quantidade <span class="v">×</span> multiplicadores</div>
-  <p>Taxas recomendadas: <span class="mono">1.07–1.12</span> para os primeiros geradores (compráveis em massa, crescimento suave); até <span class="mono">1.3–1.6</span> para geradores de tier alto e upgrades raros (poucos por run, cada compra importa).</p>
+  <h3><span class="num">5.1</span>Curva de retorno dos heróis</h3>
+  <p>Custo de treinar um herói cresce exponencial por nível; a produção por nível é linear. A variável de design não é a taxa de custo — é o <strong>tempo de retorno</strong> (custo do alistamento ÷ produção): calibrado para crescer a cada herói, não só o custo em si. A primeira versão tinha retorno de 5 a 70 segundos em todos os tiers, e por isso o elenco inteiro abria em minutos; a curva atual varia de 22 segundos no primeiro herói a 4.800 segundos (80 min) no último.</p>
+  <div class="formula">custo(nível) = custo_base <span class="v">×</span> taxa^nível
+produção(nível) = produção_base <span class="v">×</span> nível <span class="v">×</span> marco <span class="v">×</span> sinergia <span class="v">×</span> multiplicador_global</div>
 
   <div class="tbl-wrap">
     <table>
       <thead>
-        <tr><th>Tier</th><th>Gerador</th><th class="num">Custo base</th><th class="num">Taxa</th><th class="num">Produção base</th></tr>
+        <tr><th>Tier</th><th class="num">Custo de alistar</th><th class="num">Produção base</th><th class="num">Retorno</th></tr>
       </thead>
       <tbody>
-        <tr><td>1</td><td>Estagiário</td><td class="num">15 Fama</td><td class="num">1.08</td><td class="num">0.1/s</td></tr>
-        <tr><td>2</td><td>Repórter freelancer</td><td class="num">180 Fama</td><td class="num">1.09</td><td class="num">1.2/s</td></tr>
-        <tr><td>3</td><td>Assistente social (mídia)</td><td class="num">2,4 mil</td><td class="num">1.10</td><td class="num">14/s</td></tr>
-        <tr><td>4</td><td>Empresário júnior</td><td class="num">32 mil</td><td class="num">1.11</td><td class="num">170/s</td></tr>
-        <tr><td>5</td><td>Chefe de gabinete</td><td class="num">420 mil</td><td class="num">1.12</td><td class="num">2,1 mil/s</td></tr>
-        <tr><td>6</td><td>Diretoria da liga</td><td class="num">6 milhões</td><td class="num">1.14</td><td class="num">26 mil/s</td></tr>
+        <tr><td>1 — Rapaz-Barata</td><td class="num">grátis</td><td class="num">0,68/s</td><td class="num">22s</td></tr>
+        <tr><td>2 — Torneco</td><td class="num">180</td><td class="num">1/s</td><td class="num">3 min</td></tr>
+        <tr><td>4 — Viúva Cinza</td><td class="num">32 mil</td><td class="num">53/s</td><td class="num">10 min</td></tr>
+        <tr><td>6 — Ghomme de Ferro</td><td class="num">6 milhões</td><td class="num">5 mil/s</td><td class="num">20 min</td></tr>
+        <tr><td>9 — Ímã-Neto</td><td class="num">20 bilhões</td><td class="num">7,6 milhões/s</td><td class="num">44 min</td></tr>
+        <tr><td>12 — Tio Thanão</td><td class="num">120 trilhões</td><td class="num">25 bilhões/s</td><td class="num">80 min</td></tr>
       </tbody>
     </table>
   </div>
-  <p style="font-size:0.88rem;color:var(--ink-faint)">Cada tier ~10–13× mais caro e mais produtivo que o anterior — o padrão de "5 a 8 tiers por era" que dá sensação constante de escala sem precisar de mais de uma dúzia de sistemas simultâneos.</p>
+  <p style="font-size:0.88rem;color:var(--ink-faint)">O primeiro herói é sempre gratuito — sem ele e sem orçamento base, um save novo não tem como começar. Simulado: 1 hora de jogo bem jogado chega à Ameaça ~28 com 10 dos 12 heróis alistados.</p>
 
-  <h3><span class="num">5.2</span>Reboot (prestígio)</h3>
-  <p>Ao rebootar, o jogador zera Fama e geradores em troca de Fragmentos de Reboot, calculados a partir do total de Fama já gerado na run. O expoente da fórmula define o ritmo: quanto menor, mais espaçados e mais "importantes" ficam os reboots.</p>
-  <div class="formula">fragmentos_ganhos = (fama_total_da_run <span class="v">/</span> K) ^ 0.6</div>
-  <p>Expoente <span class="mono">0.6</span> fica no meio do território validado pelo gênero (0.5 a 0.8): resetar cedo demais rende quase nada, mas o jogador não precisa esperar dias para o próximo reboot valer a pena. <strong>Primeiro reboot deve estar acessível entre 20 e 60 minutos de jogo ativo</strong>, para ensinar o sistema logo. Reboots seguintes se alongam naturalmente porque a run seguinte já começa mais forte, exigindo mais Fama total pra render o mesmo ganho proporcional.</p>
+  <h3><span class="num">5.2</span>Reestruturação (prestígio)</h3>
+  <p>Ao reestruturar, o jogador zera Verba, efetivo e Melhorias da administração atual em troca de Dossiês, calculados a partir da Verba total movimentada na run. O expoente da fórmula define o ritmo: quanto menor, mais espaçadas e mais "importantes" ficam as reestruturações.</p>
+  <div class="formula">dossiês_ganhos = (verba_total_da_run <span class="v">/</span> 1.000.000) ^ 0.6</div>
+  <p>Expoente <span class="mono">0.6</span> fica no meio do território validado pelo gênero (0.5 a 0.8). O payout também passa por um teto — o Protocolo Arquivo Central limita quantos Dossiês uma única administração pode render (1 no início, até 20 milhões no topo), o que evita que uma run muito longa e muito rica invalide o próprio sistema de prestígio. Sem o Protocolo comprado, a primeira reestruturação sempre rende exatamente 1 Dossiê — pouco de propósito, e é justamente esse Dossiê que compra a primeira expansão do teto.</p>
 
   <h3><span class="num">5.3</span>Progresso offline</h3>
-  <div class="formula">ganho_offline = produção_por_segundo <span class="v">×</span> tempo_offline <span class="v">×</span> 0.7 <span class="v">(cap 12h, 20h com upgrade)</span></div>
-  <p>70% da taxa online, capado em 12 horas por padrão (upgradável até 20h via Retcon de prestígio ou 24h com Selos Raros). O teto é proposital: gera "sensação de oportunidade perdida" que traz o jogador de volta, em vez de recompensa infinita que mata a urgência do check-in diário.</p>
+  <div class="formula">ganho_offline = produção_por_segundo <span class="v">×</span> tempo_offline <span class="v">×</span> 0.7 <span class="v">(cap 12h, +2h por nível de Protocolo)</span></div>
+  <p>70% da taxa online, capado em 12 horas por padrão, upgradável via o Protocolo Turno Noturno. Intel e Equipamento também acumulam offline, na mesma proporção. O teto é proposital: gera "sensação de oportunidade perdida" que traz o jogador de volta, em vez de recompensa infinita que mata a urgência do check-in diário.</p>
 
-  <h3><span class="num">5.4</span>Notação de números grandes</h3>
+  <h3><span class="num">5.4</span>Recursos de departamento</h3>
+  <p>Intel e Equipamento escalam só linearmente com o nível do herói no posto — de propósito, para continuarem sendo uma restrição em vez de virarem moeda infinita como a Verba.</p>
+  <div class="formula">taxa_intel(nível) = 0.05 <span class="v">×</span> (1 <span class="v">+</span> nível/5) <span class="v">×</span> escala_departamental
+taxa_equipamento(nível) = 0.02 <span class="v">×</span> (1 <span class="v">+</span> nível/5) <span class="v">×</span> escala_departamental</div>
+  <p>O único jeito de acelerar além do nível do herói é o Protocolo Escala Departamental (+20% por nível, até +300% no topo) — a alavanca que falta quando o jogo só tem alistamento/treino como progressão.</p>
+
+  <h3><span class="num">5.5</span>Notação de números grandes</h3>
   <p>Acima de trilhão o jogo usa as abreviações de escala curta que o público de idle já lê fluentemente — legibilidade vence tematização aqui, e cada troca de sufixo funciona como marco visual de progresso:</p>
   <div class="tbl-wrap">
     <table>
