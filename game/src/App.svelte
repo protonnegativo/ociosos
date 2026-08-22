@@ -19,30 +19,18 @@
     totalRecruited,
     heroesAssignedToDepartment,
     tutorialActive,
-    currentTutorialStep,
-    tutorialContext,
-    skipTutorial,
-    tutorialStepReady,
-    claimTutorialStep,
-    tutorialAnchorOf,
     pendingDossies,
     currentDossieCap,
     dossieProgress,
     atDossieCap,
     availableHeroes,
     opAvailable,
-    debugSetVerba,
-    debugAddVerba,
-    debugAddDossies,
-    debugAddSupport,
-    resetSave,
-    debugSpawnAlerta,
     type BuyAmount,
   } from "./lib/game/state";
   import { threatThreshold, threatFor } from "./lib/game/threats";
   import { OPERATIONS } from "./lib/game/operations";
   import { currentObjective } from "./lib/game/objectives";
-  import { TUTORIAL_TOTAL, rewardText } from "./lib/game/tutorial";
+  import { now } from "./lib/game/clock";
   import { formatNumber, formatRate, formatDuration } from "./lib/game/format";
   import HeroesTab from "./lib/ui/HeroesTab.svelte";
   import UpgradesTab from "./lib/ui/UpgradesTab.svelte";
@@ -50,6 +38,8 @@
   import OperationsTab from "./lib/ui/OperationsTab.svelte";
   import TrophiesTab from "./lib/ui/TrophiesTab.svelte";
   import StatsTab from "./lib/ui/StatsTab.svelte";
+  import TutorialPanel from "./lib/ui/TutorialPanel.svelte";
+  import DebugPanel from "./lib/ui/DebugPanel.svelte";
 
   onMount(() => startLoop());
 
@@ -79,13 +69,7 @@
     }
   });
 
-  // Buff countdown ticks once a second so the timer reads down.
-  let now = $state(Date.now());
-  onMount(() => {
-    const t = setInterval(() => (now = Date.now()), 250);
-    return () => clearInterval(t);
-  });
-  let buffLeft = $derived($activeBuff ? Math.max(0, $activeBuff.until - now) : 0);
+  let buffLeft = $derived($activeBuff ? Math.max(0, $activeBuff.until - $now) : 0);
 
   let threshold = $derived(threatThreshold($game.threat));
   let threat = $derived(threatFor($game.threat));
@@ -136,29 +120,12 @@
     if (!tabUnlocked($game, tab)) tab = "efetivo";
   });
 
-  let tutorial = $derived(currentTutorialStep($game));
-  let tutorialProgress = $derived.by(() => {
-    if (!tutorial?.progress) return null;
-    return tutorial.progress(tutorialContext($game), tutorialAnchorOf($game));
-  });
-
   let objective = $derived(
     currentObjective($game, $production, totalRecruited($game), heroesAssignedToDepartment($game, "investigacao").length),
   );
   let objectivePct = $derived(
     objective.target > 0 ? Math.min(100, (objective.current / objective.target) * 100) : 0,
   );
-
-  // Debug drawer
-  let debugOpen = $state(false);
-  let debugValue = $state("1000");
-  let confirmingReset = $state(false);
-
-  function doReset() {
-    resetSave();
-    confirmingReset = false;
-    tab = "efetivo";
-  }
 </script>
 
 <div class="page">
@@ -238,42 +205,8 @@
     </aside>
 
     <main class="main">
-      {#if tutorialActive($game) && tutorial}
-        {@const pct = tutorialProgress && tutorialProgress.target > 0
-          ? Math.min(100, (tutorialProgress.current / tutorialProgress.target) * 100)
-          : 0}
-        <section class="tutorial" class:ready={tutorialStepReady($game)}>
-          <div class="tut-top">
-            <span class="tut-label label">
-              {tutorialStepReady($game) ? "Etapa concluída" : "Treinamento"} · etapa {$game.tutorialStep + 1} de {TUTORIAL_TOTAL}
-            </span>
-            <button class="tut-skip" onclick={skipTutorial}>pular</button>
-          </div>
-          {#if tutorialStepReady($game)}
-            <div class="tut-done">
-              <p class="tut-lesson">{tutorial.lesson}</p>
-              <button class="tut-claim" onclick={claimTutorialStep}>
-                ✓ Entendi — receber {rewardText(tutorial.reward)}
-              </button>
-            </div>
-          {:else}
-            <button class="tut-task" onclick={() => openTab(tutorial.tab as TabId)}>
-              <span class="tut-title">{tutorial.title(tutorialAnchorOf($game))}</span>
-              <span class="tut-reward mono">recompensa: {rewardText(tutorial.reward)}</span>
-            </button>
-            <div class="tut-bar">
-              <div class="tut-fill" style="width: {pct}%"></div>
-            </div>
-          {/if}
-          <div class="tut-steps">
-            {#each Array(TUTORIAL_TOTAL) as _, i (i)}
-              <span class="tut-pip" class:done={i < $game.tutorialStep} class:now={i === $game.tutorialStep}></span>
-            {/each}
-            {#if tutorialProgress && !tutorialStepReady($game)}
-              <span class="tut-count mono">{tutorialProgress.current}/{tutorialProgress.target}</span>
-            {/if}
-          </div>
-        </section>
+      {#if tutorialActive($game)}
+        <TutorialPanel onOpenTab={(t) => openTab(t as TabId)} />
       {:else}
         <button class="objective" onclick={() => openTab(objective.tab as TabId)}>
           <span class="obj-label label">Próximo passo</span>
@@ -360,36 +293,7 @@
   {/if}
 </div>
 
-<button class="debug-tab mono" class:open={debugOpen} onclick={() => (debugOpen = !debugOpen)}>
-  {debugOpen ? "✕" : "DEBUG"}
-</button>
-
-<aside class="debug-panel" class:open={debugOpen}>
-  <div class="debug-title label">Painel de debug</div>
-  <p class="debug-current mono">Verba: {formatNumber($game.verba)}</p>
-  <label class="debug-label label" for="dbg">Valor</label>
-  <input id="dbg" class="debug-input mono" type="text" inputmode="decimal" bind:value={debugValue} />
-  <div class="debug-actions">
-    <button class="debug-btn" onclick={() => debugSetVerba(debugValue)}>Definir</button>
-    <button class="debug-btn" onclick={() => debugAddVerba(debugValue)}>Somar</button>
-  </div>
-  <p class="debug-hint">Aceita negativo e notação tipo 1e12.</p>
-  <div class="debug-sep"></div>
-  <button class="debug-btn wide" onclick={() => debugAddDossies(50)}>+50 dossiês</button>
-  <button class="debug-btn wide" onclick={() => debugAddSupport(500)}>+500 intel/equip</button>
-  <button class="debug-btn wide" onclick={debugSpawnAlerta}>Disparar alerta</button>
-
-  <div class="debug-sep"></div>
-  {#if confirmingReset}
-    <p class="debug-hint">Apaga tudo e reinicia o tutorial.</p>
-    <div class="debug-actions">
-      <button class="debug-btn" onclick={() => (confirmingReset = false)}>cancelar</button>
-      <button class="debug-btn danger" onclick={doReset}>confirmar</button>
-    </div>
-  {:else}
-    <button class="debug-btn wide danger" onclick={() => (confirmingReset = true)}>Resetar do zero</button>
-  {/if}
-</aside>
+<DebugPanel onReset={() => (tab = "efetivo")} />
 
 <style>
   .page {
@@ -663,136 +567,6 @@
     min-width: 0;
   }
 
-  .tutorial.ready {
-    background: color-mix(in srgb, var(--gain-green) 14%, var(--panel));
-    border-color: var(--gain-green-ink);
-  }
-  .tutorial {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-    background: color-mix(in srgb, var(--power-gold) 12%, var(--panel));
-    border: 1px solid color-mix(in srgb, var(--power-gold) 50%, transparent);
-    border-radius: 10px;
-    padding: 0.6rem 0.8rem;
-    margin-bottom: 0.8rem;
-  }
-  .tut-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .tut-label {
-    font-size: 0.64rem;
-    color: var(--power-gold);
-  }
-  .tut-skip {
-    background: none;
-    border: none;
-    color: var(--text-faint);
-    font-size: 0.66rem;
-    text-decoration: underline;
-    padding: 0;
-  }
-  .tut-skip:hover {
-    color: var(--text-soft);
-  }
-  .tut-task {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.15rem;
-    background: none;
-    border: none;
-    padding: 0;
-    text-align: left;
-    color: var(--paper);
-  }
-  .tut-title {
-    font-size: 0.92rem;
-  }
-  .tut-task:hover .tut-title {
-    text-decoration: underline;
-  }
-  .tut-reward {
-    font-size: 0.68rem;
-    color: var(--gain-green);
-  }
-  .tut-bar {
-    height: 5px;
-    border-radius: 999px;
-    background: var(--ink);
-    overflow: hidden;
-  }
-  .tut-fill {
-    height: 100%;
-    background: var(--power-gold);
-    transition: width 0.4s ease-out;
-  }
-  .tut-done {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  .tut-lesson {
-    font-size: 0.86rem;
-    line-height: 1.45;
-    color: var(--paper);
-    margin: 0;
-    max-width: 68ch;
-  }
-  .tut-claim {
-    align-self: flex-start;
-    background: var(--gain-green-ink);
-    border: 1px solid var(--gain-green);
-    color: #06170a;
-    border-radius: 8px;
-    padding: 0.5rem 1rem;
-    font-family: "Barlow Condensed", sans-serif;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-size: 0.84rem;
-    animation: claim-in 0.2s ease-out;
-  }
-  .tut-claim:hover {
-    background: var(--gain-green);
-  }
-  @keyframes claim-in {
-    from {
-      opacity: 0;
-      transform: translateY(4px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .tut-steps {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-  }
-  .tut-pip {
-    width: 100%;
-    max-width: 1.4rem;
-    height: 3px;
-    border-radius: 999px;
-    background: var(--rule);
-  }
-  .tut-pip.done {
-    background: var(--gain-green);
-  }
-  .tut-pip.now {
-    background: var(--power-gold);
-  }
-  .tut-count {
-    margin-left: auto;
-    font-size: 0.66rem;
-    color: var(--text-faint);
-  }
-
   .objective {
     display: grid;
     grid-template-columns: auto 1fr auto;
@@ -1064,107 +838,4 @@
     }
   }
 
-  /* Debug drawer */
-  .debug-tab {
-    position: fixed;
-    top: 50%;
-    right: 0;
-    transform: translateY(-50%);
-    z-index: 50;
-    writing-mode: vertical-rl;
-    background: #111;
-    color: #5cf27a;
-    border: 1px dashed #5cf27a;
-    border-right: none;
-    border-radius: 8px 0 0 8px;
-    padding: 0.7rem 0.4rem;
-    font-size: 0.7rem;
-    letter-spacing: 0.1em;
-    transition: right 0.2s ease;
-  }
-  .debug-tab.open {
-    right: 220px;
-  }
-  .debug-panel {
-    position: fixed;
-    top: 0;
-    right: -240px;
-    width: 220px;
-    height: 100%;
-    z-index: 49;
-    background: #111;
-    color: #d6ffe0;
-    border-left: 1px dashed #5cf27a;
-    padding: 1rem 0.9rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    transition: right 0.2s ease;
-    overflow-y: auto;
-  }
-  .debug-panel.open {
-    right: 0;
-  }
-  .debug-title {
-    color: #5cf27a;
-    font-size: 0.75rem;
-  }
-  .debug-current {
-    font-size: 0.76rem;
-    margin: 0 0 0.3rem;
-  }
-  .debug-label {
-    font-size: 0.66rem;
-    color: #8fd9a0;
-  }
-  .debug-input {
-    background: #0a0a0a;
-    border: 1px solid #2f5c3a;
-    color: #d6ffe0;
-    border-radius: 6px;
-    padding: 0.4rem 0.5rem;
-    font-size: 0.84rem;
-    width: 100%;
-  }
-  .debug-actions {
-    display: flex;
-    gap: 0.5rem;
-  }
-  .debug-btn {
-    flex: 1;
-    background: #1a2e1f;
-    border: 1px solid #2f5c3a;
-    color: #d6ffe0;
-    border-radius: 6px;
-    padding: 0.4rem 0;
-    font-family: "Barlow Condensed", sans-serif;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-size: 0.7rem;
-  }
-  .debug-btn:hover {
-    border-color: #5cf27a;
-  }
-  .debug-btn.wide {
-    width: 100%;
-  }
-  .debug-btn.danger {
-    background: #2e1414;
-    border-color: #6b2b2b;
-    color: #ffb4b4;
-  }
-  .debug-btn.danger:hover {
-    border-color: #ff6a52;
-  }
-  .debug-hint {
-    font-size: 0.64rem;
-    color: #6a8f76;
-    margin: 0.2rem 0 0;
-  }
-  .debug-sep {
-    height: 1px;
-    background: #2f5c3a;
-    margin: 0.4rem 0;
-  }
 </style>

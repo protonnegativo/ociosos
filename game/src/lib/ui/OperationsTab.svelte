@@ -11,15 +11,9 @@
     opDurationMs,
   } from "../game/state";
   import { OPERATIONS, OPERATIONS_BY_ID, EQUIPPED_BONUS } from "../game/operations";
+  import { now } from "../game/clock";
   import { HEROES_BY_ID, ROLE_ICON, FACTION_COLOR } from "../game/heroes";
   import { formatNumber, formatRate, formatDuration } from "../game/format";
-
-  // Ticks so countdowns and cooldowns read down live.
-  let now = $state(Date.now());
-  $effect(() => {
-    const t = setInterval(() => (now = Date.now()), 500);
-    return () => clearInterval(t);
-  });
 
   let planning = $state<string | null>(null);
   let picked = $state<string[]>([]);
@@ -54,7 +48,7 @@
         {#each $game.activeOps as op (op.defId)}
           {@const def = OPERATIONS_BY_ID[op.defId]}
           {@const total = op.endsAt - op.startedAt}
-          {@const left = Math.max(0, op.endsAt - now)}
+          {@const left = Math.max(0, op.endsAt - $now)}
           {@const pct = total > 0 ? ((total - left) / total) * 100 : 100}
           <div class="op-card running">
             <div class="op-head">
@@ -88,8 +82,8 @@
     {:else}
       <div class="grid">
         {#each unlocked as def (def.id)}
-          {@const ready = opAvailable($game, def, now)}
-          {@const cd = Math.max(0, ($game.opCooldowns[def.id] ?? 0) - now)}
+          {@const ready = opAvailable($game, def, $now)}
+          {@const cd = Math.max(0, ($game.opCooldowns[def.id] ?? 0) - $now)}
           {@const isPlanning = planning === def.id}
           {@const enough = free.length >= def.slots}
           <div class="op-card" class:ready>
