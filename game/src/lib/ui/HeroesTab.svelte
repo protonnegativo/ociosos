@@ -70,6 +70,7 @@
         buyGain,
         onPatrol,
         locked: heroAutoLocked($game, def.id),
+        isFocus: $game.focusHero === def.id,
       };
     }),
   );
@@ -123,6 +124,9 @@
             <span class="chip chip-cyan">🎯 em campo</span>
             <span class="chip chip-gold">NV {row.level}</span>
           {:else if row.recruited}
+            {#if row.isFocus}
+              <span class="chip chip-gold">👑 FOCO</span>
+            {/if}
             <span class="chip chip-gold">NV {row.level}</span>
             <span class="chip chip-green">▲ {formatRate(row.output)}</span>
             {#if row.milestone > 1}
@@ -151,9 +155,7 @@
         <span class="mono cost">{row.cost.lte(0) ? "grátis" : formatNumber(row.cost, 0)}</span>
         <span class="mono gain">↗ +{formatRate(row.buyGain)}</span>
         {#if !row.onPatrol}<span class="mono gain-note">se em patrulha</span>{/if}
-        {#if !row.affordable && row.wait}
-          <span class="mono wait">em {row.wait}</span>
-        {/if}
+        <span class="mono wait" style:visibility={!row.affordable && row.wait ? "visible" : "hidden"}>em {row.wait || "0s"}</span>
       </button>
     </div>
   {/each}

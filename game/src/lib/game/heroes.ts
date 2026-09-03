@@ -1,6 +1,8 @@
 export type Faction = "Ociosos" | "Mutantes Anônimos" | "Guarda-Costas da Galáxia" | "C.H.A.T.O.";
 
 export interface HeroDef {
+  weaponName: string;
+  accessoryName: string;
   id: string;
   name: string;
   flavor: string;
@@ -35,6 +37,8 @@ export const HEROES: HeroDef[] = [
     // Front-loaded on purpose: with no agency income, this hero alone carries
     // the opening minute, so it has to give the player something to spend.
     baseProduction: 0.682,
+    weaponName: "Antenas de Titânio",
+    accessoryName: "Casco Indestrutível",
   },
   {
     id: "torneco",
@@ -47,6 +51,8 @@ export const HEROES: HeroDef[] = [
     recruitCost: 180,
     costRate: 1.11,
     baseProduction: 1.0,
+    weaponName: "Martelo Energizado",
+    accessoryName: "Cinto de Ferramentas",
   },
   {
     id: "alho-poro",
@@ -59,6 +65,8 @@ export const HEROES: HeroDef[] = [
     recruitCost: 2_400,
     costRate: 1.11,
     baseProduction: 6.667,
+    weaponName: "Walkman Laser",
+    accessoryName: "Jaqueta Galáctica",
   },
   {
     id: "viuva-cinza",
@@ -71,6 +79,8 @@ export const HEROES: HeroDef[] = [
     recruitCost: 32_000,
     costRate: 1.12,
     baseProduction: 53.333,
+    weaponName: "Pistolas Silenciadas",
+    accessoryName: "Relógio Multi-Foco",
   },
   {
     id: "capitao-brasil",
@@ -83,6 +93,8 @@ export const HEROES: HeroDef[] = [
     recruitCost: 420_000,
     costRate: 1.12,
     baseProduction: 477.273,
+    weaponName: "Escudo Reforçado",
+    accessoryName: "Uniforme Clássico",
   },
   {
     id: "ghomme-de-ferro",
@@ -95,6 +107,8 @@ export const HEROES: HeroDef[] = [
     recruitCost: 6_000_000,
     costRate: 1.13,
     baseProduction: 5000.0,
+    weaponName: "Repulsores Mk II",
+    accessoryName: "Reator de Peito",
   },
   {
     id: "ciumento",
@@ -107,6 +121,8 @@ export const HEROES: HeroDef[] = [
     recruitCost: 90_000_000,
     costRate: 1.14,
     baseProduction: 56250.0,
+    weaponName: "Garras de Adamantium",
+    accessoryName: "Charuto Interminável",
   },
   {
     id: "a-massa",
@@ -119,6 +135,8 @@ export const HEROES: HeroDef[] = [
     recruitCost: 1_300_000_000,
     costRate: 1.15,
     baseProduction: 625000.0,
+    weaponName: "Punhos Esmagadores",
+    accessoryName: "Calça Indestrutível",
   },
   {
     id: "ima-neto",
@@ -131,6 +149,8 @@ export const HEROES: HeroDef[] = [
     recruitCost: 20_000_000_000,
     costRate: 1.15,
     baseProduction: 7575757.576,
+    weaponName: "Controle Magnético",
+    accessoryName: "Capacete Psíquico",
   },
   {
     id: "doutor-estranhissimo",
@@ -143,6 +163,8 @@ export const HEROES: HeroDef[] = [
     recruitCost: 340_000_000_000,
     costRate: 1.16,
     baseProduction: 103658536.585,
+    weaponName: "Olho Místico",
+    accessoryName: "Capa Flutuante",
   },
   {
     id: "pantera-parda",
@@ -155,6 +177,8 @@ export const HEROES: HeroDef[] = [
     recruitCost: 6_000_000_000_000,
     costRate: 1.17,
     baseProduction: 1500000000.0,
+    weaponName: "Garras de Vibranium",
+    accessoryName: "Traje Furtivo",
   },
   {
     id: "tio-thanao",
@@ -167,6 +191,8 @@ export const HEROES: HeroDef[] = [
     recruitCost: 120_000_000_000_000,
     costRate: 1.18,
     baseProduction: 25000000000.0,
+    weaponName: "Manopla do Poder",
+    accessoryName: "Trono Flutuante",
   },
 ];
 

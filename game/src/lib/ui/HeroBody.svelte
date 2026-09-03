@@ -1,6 +1,7 @@
 <script lang="ts">
   import { BODIES } from "../game/bodies";
   import { FACES } from "../game/faces";
+  import { game } from "../game/state";
   import HeroFace from "./HeroFace.svelte";
 
   let {
@@ -15,6 +16,7 @@
   let stage = $derived(BODIES[heroId]?.[prestiged ? 2 : Math.min(2, Math.max(0, tier))]);
   let skin = $derived(FACES[heroId]?.skin ?? "#c9a37a");
   let scale = $derived(width / 140);
+  let eq = $derived($game.equipment[heroId]);
 </script>
 
 {#if stage}
@@ -92,6 +94,9 @@
     {#if prestiged}
       <div class="crown" style="top: {-22 * scale}px; font-size: {1.3 * scale}rem">👑</div>
     {/if}
+
+    {#if eq?.arma}<span class="eq-icon eq-arma rarity-{eq.arma.split('_')[1]}" style="--scale: {scale}">⚔️</span>{/if}
+    {#if eq?.acessorio}<span class="eq-icon eq-acessorio rarity-{eq.acessorio.split('_')[1]}" style="--scale: {scale}">💍</span>{/if}
   </div>
 {/if}
 
@@ -174,4 +179,31 @@
     line-height: 1;
     filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5));
   }
+  
+  .eq-icon {
+    position: absolute;
+    z-index: 5;
+    font-size: calc(1.5rem * var(--scale));
+    background: var(--panel);
+    border-radius: 50%;
+    width: calc(2.2rem * var(--scale));
+    height: calc(2.2rem * var(--scale));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--rule);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+  }
+  .eq-arma {
+    bottom: calc(10px * var(--scale));
+    left: calc(0px * var(--scale));
+  }
+  .eq-acessorio {
+    bottom: calc(10px * var(--scale));
+    right: calc(0px * var(--scale));
+  }
+  .rarity-comum { border-color: #ccc !important; }
+  .rarity-incomum { border-color: #1eff00 !important; }
+  .rarity-raro { border-color: #00aaff !important; }
+  .rarity-epico { border-color: #aa00ff !important; }
 </style>

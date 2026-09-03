@@ -21,6 +21,8 @@ export interface OperationDef {
   intelCost: number;
   /** Optional: if the agency has it, the squad goes out equipped. */
   equipCost: number;
+  /** Chance (0.0 a 1.0) of dropping an item upon completion. */
+  itemDropChance?: number;
 }
 
 /** Payout multiplier when the squad goes out fully equipped. */
@@ -71,6 +73,7 @@ export const OPERATIONS: OperationDef[] = [
     minThreat: 4,
     intelCost: 20,
     equipCost: 7,
+    itemDropChance: 0.15,
   },
   {
     id: "contencao",
@@ -86,6 +89,7 @@ export const OPERATIONS: OperationDef[] = [
     minThreat: 7,
     intelCost: 34,
     equipCost: 12,
+    itemDropChance: 0.3,
   },
   {
     id: "assalto",
@@ -101,6 +105,7 @@ export const OPERATIONS: OperationDef[] = [
     minThreat: 11,
     intelCost: 60,
     equipCost: 22,
+    itemDropChance: 0.5,
   },
   {
     id: "bloqueio",
@@ -116,6 +121,7 @@ export const OPERATIONS: OperationDef[] = [
     minThreat: 16,
     intelCost: 110,
     equipCost: 40,
+    itemDropChance: 0.75,
   },
   {
     id: "forca-tarefa",
@@ -130,6 +136,7 @@ export const OPERATIONS: OperationDef[] = [
     minThreat: 22,
     intelCost: 200,
     equipCost: 75,
+    itemDropChance: 1.0,
   },
 ];
 

@@ -45,10 +45,11 @@
   import TutorialPanel from "./lib/ui/TutorialPanel.svelte";
   import DebugPanel from "./lib/ui/DebugPanel.svelte";
   import HeroBody from "./lib/ui/HeroBody.svelte";
+  import InventoryTab from "./lib/ui/InventoryTab.svelte";
 
   onMount(() => startLoop());
 
-  type TabId = "efetivo" | "operacoes" | "melhorias" | "protocolos" | "condecoracoes" | "stats";
+  type TabId = "efetivo" | "operacoes" | "melhorias" | "protocolos" | "condecoracoes" | "stats" | "inventario";
   let tab = $state<TabId>("efetivo");
   let buyAmount = $state<BuyAmount>(1);
 
@@ -97,6 +98,7 @@
     { id: "melhorias" as const, label: "Melhorias" },
     { id: "protocolos" as const, label: "Reestruturar" },
     { id: "condecoracoes" as const, label: "Condecorações" },
+    { id: "inventario" as const, label: "Inventário" },
     { id: "stats" as const, label: "Relatório" },
   ];
 
@@ -273,6 +275,8 @@
         <ProtocolsTab />
       {:else if tab === "condecoracoes"}
         <TrophiesTab />
+      {:else if tab === "inventario"}
+        <InventoryTab />
       {:else}
         <StatsTab />
       {/if}

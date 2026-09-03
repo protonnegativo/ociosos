@@ -137,7 +137,7 @@
             </div>
             <button class="up-buy" disabled={!affordable} onclick={() => buyUpgrade(u.id)}>
               <span class="mono cost">{formatNumber(u.cost, 0)}</span>
-              {#if !affordable && wait}<span class="mono wait">em {wait}</span>{/if}
+              <span class="mono wait" style:visibility={!affordable && wait ? "visible" : "hidden"}>em {wait || "0s"}</span>
             </button>
           </div>
         {/each}

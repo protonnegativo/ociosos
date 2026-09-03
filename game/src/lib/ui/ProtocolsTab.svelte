@@ -14,8 +14,10 @@
   } from "../game/state";
   import { formatNumber } from "../game/format";
   import ProtocolTree from "./ProtocolTree.svelte";
+  import { HEROES } from "../game/heroes";
 
   let confirming = $state(false);
+  let selectedFocus = $state<string | null>(null);
   let pending = $derived(pendingDossies($game));
   let ready = $derived(canRestructure($game));
   let cap = $derived(currentDossieCap($game));
@@ -50,15 +52,25 @@
         <span class="gain-label label">dossiês ao reestruturar</span>
       </div>
       {#if confirming}
-        <div class="confirm-row">
-          <button class="btn-ghost" onclick={() => (confirming = false)}>Cancelar</button>
-          <button
-            class="restructure-btn"
-            onclick={() => {
-              doRestructure();
-              confirming = false;
-            }}>Confirmar reestruturação</button
-          >
+        <div class="confirm-panel">
+          <label class="focus-label">Selecione um Herói Foco (Opcional):</label>
+          <p class="focus-hint">O Herói Foco receberá x5 de bônus de produção e o dobro do bônus de itens nesta nova administração.</p>
+          <select bind:value={selectedFocus} class="focus-select">
+            <option value={null}>Nenhum foco</option>
+            {#each HEROES as hero}
+              <option value={hero.id}>{hero.name}</option>
+            {/each}
+          </select>
+          <div class="confirm-row">
+            <button class="btn-ghost" onclick={() => (confirming = false)}>Cancelar</button>
+            <button
+              class="restructure-btn"
+              onclick={() => {
+                doRestructure(selectedFocus);
+                confirming = false;
+              }}>Confirmar reestruturação</button
+            >
+          </div>
         </div>
       {:else}
         <button class="restructure-btn" disabled={!ready} onclick={() => (confirming = true)}>
@@ -225,9 +237,39 @@
     font-size: 0.66rem;
     color: var(--text-faint);
   }
+  .confirm-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+    margin-top: 1rem;
+    background: color-mix(in srgb, var(--panel-raised) 50%, transparent);
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px dashed var(--rule);
+  }
+  .focus-label {
+    font-size: 0.8rem;
+    color: var(--power-gold);
+    font-weight: bold;
+  }
+  .focus-hint {
+    font-size: 0.7rem;
+    color: var(--text-soft);
+    margin: 0;
+  }
+  .focus-select {
+    padding: 0.4rem;
+    background: var(--panel);
+    color: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+  }
   .confirm-row {
     display: flex;
     gap: 0.5rem;
+    justify-content: flex-end;
   }
   .restructure-btn {
     background: var(--fragment-cyan);

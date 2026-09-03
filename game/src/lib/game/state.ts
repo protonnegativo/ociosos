@@ -16,6 +16,7 @@ import {
 import { ACHIEVEMENTS, ACHIEVEMENT_BONUS, type AchievementContext } from "./achievements";
 import { TUTORIAL, TUTORIAL_TOTAL, rewardText, type TutorialContext } from "./tutorial";
 import { formatNumber } from "./format";
+import { rollItemDrop, ITEMS_BY_ID } from "./items";
 
 export type BuyAmount = 1 | 10 | 100 | "max";
 
@@ -40,6 +41,11 @@ export interface ActiveOp {
   equipped: boolean;
 }
 
+export interface HeroEquipment {
+  arma?: string;
+  acessorio?: string;
+}
+
 export interface GameState {
   // Currencies
   verba: Decimal;
@@ -51,15 +57,21 @@ export interface GameState {
   /** Non-exponential support resources produced by the departments. */
   intel: number;
   equipamento: number;
+  inventory: Record<string, number>;
+  itemLevels: Record<string, number>;
 
   // Roster
   levels: Record<string, number>;
   /** heroId -> department id. Unlisted heroes fall back to patrol. */
   assignments: Record<string, string>;
+  /** heroId -> equipped items */
+  equipment: Record<string, HeroEquipment>;
 
   // Campaign
   threat: number;
   maxThreat: number;
+  /** Herói principal da run atual. Ganha bônus massivos. */
+  focusHero: string | null;
 
   // Progression systems
   upgrades: string[]; // wiped on restructuring
@@ -148,10 +160,14 @@ function freshState(): GameState {
     dossies: new Decimal(0),
     intel: 0,
     equipamento: 0,
+    inventory: {},
+    itemLevels: {},
     levels: freshLevels(),
     assignments: {},
+    equipment: {},
     threat: 1,
     maxThreat: 1,
+    focusHero: null,
     upgrades: [],
     heroPrestige: [],
     protocols: {},
@@ -184,10 +200,14 @@ function serialize(s: GameState): string {
     dossies: s.dossies.toString(),
     intel: s.intel,
     equipamento: s.equipamento,
+    inventory: s.inventory,
+    itemLevels: s.itemLevels,
     levels: s.levels,
     assignments: s.assignments,
+    equipment: s.equipment,
     threat: s.threat,
     maxThreat: s.maxThreat,
+    focusHero: s.focusHero,
     upgrades: s.upgrades,
     heroPrestige: s.heroPrestige,
     protocols: s.protocols,
@@ -261,10 +281,14 @@ function deserialize(raw: string): GameState {
     dossies: new Decimal(p.dossies ?? p.fragmentos ?? 0),
     intel: typeof p.intel === "number" ? p.intel : 0,
     equipamento: typeof p.equipamento === "number" ? p.equipamento : 0,
+    inventory: typeof p.inventory === "object" && p.inventory ? p.inventory : {},
+    itemLevels: typeof p.itemLevels === "object" && p.itemLevels ? p.itemLevels : {},
     levels,
     assignments: sanitizeAssignments(p.assignments),
+    equipment: typeof p.equipment === "object" && p.equipment ? p.equipment : {},
     threat: p.threat ?? p.edition ?? 1,
     maxThreat: p.maxThreat ?? p.maxEdition ?? p.threat ?? p.edition ?? 1,
+    focusHero: typeof p.focusHero === "string" ? p.focusHero : null,
     upgrades: Array.isArray(p.upgrades) ? p.upgrades.filter((u: string) => u in UPGRADES_BY_ID) : [],
     heroPrestige: Array.isArray(p.heroPrestige) ? p.heroPrestige.filter((h: unknown) => typeof h === "string") : [],
     protocols,
@@ -388,6 +412,8 @@ export function tabUnlocked(s: GameState, id: string): boolean {
       return tutorialDone;
     case "condecoracoes":
       return s.achievements.length > 0;
+    case "inventario":
+      return s.opsCompleted > 0 || Object.keys(s.inventory).length > 0;
     case "stats":
       return s.maxThreat >= 3;
     default:
@@ -504,11 +530,32 @@ export function globalMultiplier(s: GameState, buff: ActiveBuff | null): Decimal
 export function heroOutputRaw(s: GameState, def: HeroDef, buff: ActiveBuff | null): Decimal {
   const level = s.levels[def.id] ?? 0;
   if (level <= 0) return new Decimal(0);
+  
+  let itemMult = 1;
+  const eq = s.equipment[def.id];
+  if (eq) {
+    const itemEffectMult = s.focusHero === def.id ? 2 : 1;
+    if (eq.arma && ITEMS_BY_ID[eq.arma]) {
+      const lvl = s.itemLevels[eq.arma] ?? 0;
+      const bonus = (ITEMS_BY_ID[eq.arma].prodBonus - 1) * (1 + 0.5 * lvl);
+      itemMult *= 1 + bonus * itemEffectMult;
+    }
+    if (eq.acessorio && ITEMS_BY_ID[eq.acessorio]) {
+      const lvl = s.itemLevels[eq.acessorio] ?? 0;
+      const bonus = (ITEMS_BY_ID[eq.acessorio].prodBonus - 1) * (1 + 0.5 * lvl);
+      itemMult *= 1 + bonus * itemEffectMult;
+    }
+  }
+  
+  const focusMult = s.focusHero === def.id ? 5 : 1; // Bônus passivo x5 para o Herói Foco
+
   return new Decimal(def.baseProduction)
     .times(level)
     .times(milestoneMultiplier(level))
     .times(heroUpgradeMult(s, def.id))
     .times(factionSynergy(s, def.faction))
+    .times(itemMult)
+    .times(focusMult)
     .times(globalMultiplier(s, buff));
 }
 
@@ -724,7 +771,7 @@ export function canRestructure(s: GameState): boolean {
   return pendingDossies(s).gt(0);
 }
 
-export function doRestructure(): void {
+export function doRestructure(focusHeroId: string | null = null): void {
   game.update((s) => {
     if (!canRestructure(s)) return s;
     const gained = pendingDossies(s);
@@ -740,8 +787,12 @@ export function doRestructure(): void {
       dossies: s.dossies.plus(gained),
       intel: 0,
       equipamento: 0,
+      inventory: s.inventory, 
+      itemLevels: s.itemLevels,
       levels,
       assignments: {},
+      equipment: s.equipment,
+      focusHero: focusHeroId,
       threat: 1,
       upgrades: [],
       heroPrestige: [],
@@ -892,14 +943,30 @@ function settleOperations(now: number, buff: ActiveBuff | null): void {
     // Priced off what the squad would have produced, so a stronger squad is
     // always the better squad to send.
     const payout = opPayout(get(game), def, op.heroIds, buff, op.equipped);
-    game.update((st) => ({
-      ...earn(st, payout),
-      activeOps: st.activeOps.filter((o) => o !== op),
-      opCooldowns: { ...st.opCooldowns, [def.id]: now + def.cooldownMs },
-      opsCompleted: st.opsCompleted + 1,
-      equippedOpsCompleted: st.equippedOpsCompleted + (op.equipped ? 1 : 0),
-    }));
+    
+    let droppedItemId: string | null = null;
+    if (def.itemDropChance && Math.random() < def.itemDropChance) {
+      droppedItemId = rollItemDrop(get(game).maxThreat);
+    }
+
+    game.update((st) => {
+      const inventory = { ...st.inventory };
+      if (droppedItemId) {
+        inventory[droppedItemId] = (inventory[droppedItemId] ?? 0) + 1;
+      }
+      return {
+        ...earn(st, payout),
+        inventory,
+        activeOps: st.activeOps.filter((o) => o !== op),
+        opCooldowns: { ...st.opCooldowns, [def.id]: now + def.cooldownMs },
+        opsCompleted: st.opsCompleted + 1,
+        equippedOpsCompleted: st.equippedOpsCompleted + (op.equipped ? 1 : 0),
+      };
+    });
     pushToast(`${def.emoji} ${def.name} concluída — +${formatNumber(payout)} de Verba`, "green");
+    if (droppedItemId) {
+      pushToast(`Item encontrado: ${ITEMS_BY_ID[droppedItemId]?.name}`, "gold");
+    }
   }
 }
 
@@ -1229,4 +1296,72 @@ export function startLoop(): void {
   setInterval(persist, AUTOSAVE_MS);
 
   if (typeof window !== "undefined") window.addEventListener("beforeunload", persist);
+}
+
+// --- Equipamentos ---------------------------------------------------------
+
+export function equipItem(heroId: string, itemId: string): void {
+  game.update((s) => {
+    const item = ITEMS_BY_ID[itemId];
+    if (!item) return s;
+    if ((s.inventory[itemId] ?? 0) <= 0) return s;
+    
+    const eq = s.equipment[heroId] ?? {};
+    const oldItemId = eq[item.type];
+    
+    const newInventory = { ...s.inventory };
+    newInventory[itemId] -= 1;
+    if (oldItemId) {
+      newInventory[oldItemId] = (newInventory[oldItemId] ?? 0) + 1;
+    }
+    
+    return {
+      ...s,
+      inventory: newInventory,
+      equipment: {
+        ...s.equipment,
+        [heroId]: { ...eq, [item.type]: itemId },
+      }
+    };
+  });
+}
+
+export function unequipItem(heroId: string, slot: "arma" | "acessorio"): void {
+  game.update((s) => {
+    const eq = s.equipment[heroId];
+    if (!eq || !eq[slot]) return s;
+    
+    const oldItemId = eq[slot]!;
+    const newInventory = { ...s.inventory };
+    newInventory[oldItemId] = (newInventory[oldItemId] ?? 0) + 1;
+    
+    const newEq = { ...eq };
+    delete newEq[slot];
+    
+    return {
+      ...s,
+      inventory: newInventory,
+      equipment: {
+        ...s.equipment,
+        [heroId]: newEq,
+      }
+    };
+  });
+}
+
+export function upgradeItem(itemId: string): void {
+  game.update((s) => {
+    const lvl = s.itemLevels[itemId] ?? 0;
+    const cost = 10 * Math.pow(2, lvl);
+    if (s.equipamento < cost) return s;
+    
+    return {
+      ...s,
+      equipamento: s.equipamento - cost,
+      itemLevels: {
+        ...s.itemLevels,
+        [itemId]: lvl + 1,
+      },
+    };
+  });
 }
